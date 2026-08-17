@@ -39,6 +39,27 @@ function parseErrorBody(body: unknown): {
   return { message: 'Request failed' }
 }
 
+// Shared by every concurrent 401 so only one /api/auth/refresh/ call is
+// ever in flight at a time. Without this, several queries hitting an
+// expired access token around the same moment (e.g. customers + products
+// + options on initial load) would each independently call refresh with
+// the same refresh-token cookie; since refresh rotates and blacklists
+// that token on use, only the first to land actually succeeds and every
+// other concurrent caller gets a permanent 401 for its own request.
+let refreshPromise: Promise<boolean> | null = null
+
+function refreshAccessToken(): Promise<boolean> {
+  refreshPromise ??= fetch(`${API_URL}/api/auth/refresh/`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+    .then((response) => response.ok)
+    .finally(() => {
+      refreshPromise = null
+    })
+  return refreshPromise
+}
+
 async function requestWithRefresh(
   path: string,
   init: RequestInit,
@@ -53,11 +74,8 @@ async function requestWithRefresh(
     return response
   }
 
-  const refreshed = await fetch(`${API_URL}/api/auth/refresh/`, {
-    method: 'POST',
-    credentials: 'include',
-  })
-  if (!refreshed.ok) {
+  const refreshed = await refreshAccessToken()
+  if (!refreshed) {
     return response
   }
 
