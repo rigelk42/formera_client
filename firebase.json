@@ -4,6 +4,13 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "formera-api",
+          "region": "us-west2"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
