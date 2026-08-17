@@ -5,7 +5,7 @@ import { useAuth } from '../auth/useAuth'
 import { ApiError } from '../lib/api'
 
 function fromPath(location: Location): string {
-  return (location.state as { from?: Location })?.from?.pathname ?? '/'
+  return (location.state as { from?: Location })?.from?.pathname ?? '/dashboard'
 }
 
 interface LoginFormValues {

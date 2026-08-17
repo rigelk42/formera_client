@@ -16,3 +16,5 @@ export interface AuthContextValue {
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
+
+export const meQueryKey = ['auth', 'me']

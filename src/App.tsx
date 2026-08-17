@@ -1,11 +1,14 @@
 import { ConfigProvider, theme } from 'antd'
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { Toolbar } from './components/Toolbar'
 import { usePrefersDark } from './lib/usePrefersDark'
-import { HomePage } from './pages/HomePage'
+import { CustomersPage } from './pages/CustomersPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
+import { OrdersPage } from './pages/OrdersPage'
+import { ProductsPage } from './pages/ProductsPage'
 
 function App() {
   const prefersDark = usePrefersDark()
@@ -26,8 +29,12 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/customers" element={<CustomersPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/products" element={<ProductsPage />} />
           </Route>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AuthProvider>
     </ConfigProvider>

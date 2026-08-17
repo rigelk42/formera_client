@@ -1,37 +1,52 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, type ReactNode } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '../lib/api'
-import { AuthContext, type AuthStatus, type User } from './context'
+import { AuthContext, meQueryKey, type AuthStatus, type User } from './context'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [status, setStatus] = useState<AuthStatus>('loading')
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    apiFetch<User>('/api/auth/me/')
-      .then((currentUser) => {
-        setUser(currentUser)
-        setStatus('authenticated')
-      })
-      .catch(() => {
-        setUser(null)
-        setStatus('unauthenticated')
-      })
-  }, [])
+  const meQuery = useQuery({
+    queryKey: meQueryKey,
+    queryFn: () => apiFetch<User>('/api/auth/me/'),
+    retry: false,
+  })
 
-  const login = useCallback(async (email: string, password: string) => {
-    const { user: loggedInUser } = await apiFetch<{ user: User }>('/api/auth/login/', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    })
-    setUser(loggedInUser)
-    setStatus('authenticated')
-  }, [])
+  const loginMutation = useMutation({
+    mutationFn: ({ email, password }: { email: string; password: string }) =>
+      apiFetch<{ user: User }>('/api/auth/login/', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      }),
+    onSuccess: ({ user }) => {
+      queryClient.setQueryData(meQueryKey, user)
+    },
+  })
+
+  const logoutMutation = useMutation({
+    mutationFn: () => apiFetch('/api/auth/logout/', { method: 'POST' }).catch(() => {}),
+    onSuccess: () => {
+      queryClient.setQueryData(meQueryKey, null)
+    },
+  })
+
+  const login = useCallback(
+    async (email: string, password: string) => {
+      await loginMutation.mutateAsync({ email, password })
+    },
+    [loginMutation],
+  )
 
   const logout = useCallback(async () => {
-    await apiFetch('/api/auth/logout/', { method: 'POST' }).catch(() => {})
-    setUser(null)
-    setStatus('unauthenticated')
-  }, [])
+    await logoutMutation.mutateAsync()
+  }, [logoutMutation])
+
+  const user = meQuery.data ?? null
+  const status: AuthStatus = meQuery.isPending
+    ? 'loading'
+    : user
+      ? 'authenticated'
+      : 'unauthenticated'
 
   return (
     <AuthContext.Provider value={{ user, status, login, logout }}>
