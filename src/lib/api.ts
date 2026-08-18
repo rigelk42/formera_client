@@ -130,3 +130,23 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   }
   return response.json()
 }
+
+// For endpoints that return a file (e.g. a PDF) rather than JSON --
+// reuses the same auth/refresh handling as apiFetch, just skips the
+// .json() parse and surfaces the server-suggested filename instead.
+export async function apiFetchBlob(
+  path: string,
+  init: RequestInit = {},
+): Promise<{ blob: Blob; filename: string | null }> {
+  const response = await requestWithRefresh(path, init, true)
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null)
+    const { message, fields } = parseErrorBody(body)
+    throw new ApiError(response.status, message, fields)
+  }
+
+  const disposition = response.headers.get('Content-Disposition')
+  const filename = disposition?.match(/filename="?([^"]+)"?/)?.[1] ?? null
+  return { blob: await response.blob(), filename }
+}

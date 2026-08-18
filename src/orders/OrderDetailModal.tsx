@@ -1,11 +1,23 @@
-import { Descriptions, Empty, Modal, Table, Tag, type TableColumnsType } from 'antd'
+import { useState } from 'react'
+import {
+  Button,
+  Descriptions,
+  Empty,
+  message,
+  Modal,
+  Table,
+  Tag,
+  type TableColumnsType,
+} from 'antd'
+import { DownloadOutlined } from '@ant-design/icons'
+import { ApiError } from '../lib/api'
+import { fetchOrderInvoice } from './api'
 import type { Order, OrderLineItem, OrderStatus } from './types'
 
 const statusColor: Record<OrderStatus, string> = {
-  pending: 'default',
   paid: 'blue',
-  shipped: 'green',
-  cancelled: 'red',
+  cash_pickup: 'green',
+  referral: 'purple',
 }
 
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
@@ -33,9 +45,50 @@ interface OrderDetailModalProps {
 }
 
 export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
+  const [downloading, setDownloading] = useState(false)
+
+  const handleDownloadInvoice = async () => {
+    if (!order) return
+    setDownloading(true)
+    try {
+      const { blob, filename } = await fetchOrderInvoice(order.id)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename ?? `invoice-${order.order_number}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      message.error(
+        err instanceof ApiError ? err.message : 'Failed to download invoice.',
+      )
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   return (
     <Modal
-      title={order ? `Order ${order.order_number}` : 'Order'}
+      title={
+        order ? (
+          <div className="flex items-center gap-3">
+            <span>Order {order.order_number}</span>
+            <Button
+              type="primary"
+              size="small"
+              icon={<DownloadOutlined />}
+              loading={downloading}
+              onClick={handleDownloadInvoice}
+            >
+              Get Invoice
+            </Button>
+          </div>
+        ) : (
+          'Order'
+        )
+      }
       open={order !== null}
       onCancel={onClose}
       footer={null}
@@ -46,8 +99,13 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
           <Descriptions column={{ xs: 1, sm: 2 }} size="small" className="mb-6">
             <Descriptions.Item label="Customer">{order.customer_name}</Descriptions.Item>
             <Descriptions.Item label="Status">
-              <Tag color={statusColor[order.status]}>{order.status}</Tag>
+              <Tag color={statusColor[order.status]}>
+                {order.status.replace('_', ' ')}
+              </Tag>
             </Descriptions.Item>
+            {order.discount && (
+              <Descriptions.Item label="Discount">{order.discount}%</Descriptions.Item>
+            )}
             <Descriptions.Item label="Total">
               {currency.format(Number(order.total_amount))}
             </Descriptions.Item>

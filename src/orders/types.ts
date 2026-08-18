@@ -1,4 +1,4 @@
-export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'cancelled'
+export type OrderStatus = 'paid' | 'cash_pickup' | 'referral'
 
 export interface OrderLineItem {
   id: number
@@ -25,6 +25,9 @@ export interface Order {
   customer_name: string
   shipping_address: OrderShippingAddress | null
   status: OrderStatus
+  // Whole-percent discount applied to the line item subtotal, 1-100.
+  // null means no discount was applied.
+  discount: number | null
   // DRF serializes DecimalField as a string to avoid float precision loss
   total_amount: string
   items: OrderLineItem[]

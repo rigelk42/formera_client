@@ -40,6 +40,8 @@ interface OrderFormValues {
     postal_code: string
     country: string
   }
+  includeDiscount?: boolean
+  discount?: number
   items: { product: number; quantity: number }[]
 }
 
@@ -57,6 +59,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
   const customerId = Form.useWatch('customerId', form)
   const includeAddress = Form.useWatch('includeAddress', form)
   const addressMode = Form.useWatch('addressMode', form) ?? 'new'
+  const includeDiscount = Form.useWatch('includeDiscount', form)
 
   const { data: customerOptions, isPending: customersLoading } = useCustomerOptions()
   const { data: productOptions, isPending: productsLoading } = useProductOptions()
@@ -97,6 +100,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
             country: address.country,
           }
         : undefined,
+      discount: values.includeDiscount ? values.discount : undefined,
     }
 
     if (values.customerMode === 'existing') {
@@ -284,6 +288,22 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
               </>
             )}
           </>
+        )}
+
+        <Form.Item name="includeDiscount" valuePropName="checked" className="mb-2">
+          <Checkbox>Apply a discount</Checkbox>
+        </Form.Item>
+
+        {includeDiscount && (
+          <Form.Item
+            label="Discount"
+            name="discount"
+            rules={[
+              { required: true, message: 'Enter a discount between 1 and 100' },
+            ]}
+          >
+            <InputNumber min={1} max={100} step={1} addonAfter="%" />
+          </Form.Item>
         )}
 
         <Form.List name="items">

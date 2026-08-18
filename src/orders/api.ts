@@ -1,19 +1,33 @@
-import { apiFetch } from '../lib/api'
-import { cursorFromUrl, type CursorPage } from '../lib/pagination'
+import { apiFetch, apiFetchBlob } from '../lib/api'
+import { cursorFromUrl } from '../lib/pagination'
 import type { AddressInput } from '../customers/types'
 import type { Order } from './types'
 
+// One Monday-Sunday calendar week's worth of orders, as returned by
+// OrderWeekPagination on the backend -- grouping happens server-side so a
+// week is never split across two pages.
+export interface OrderWeekGroup {
+  week_start: string
+  orders: Order[]
+}
+
+interface OrderWeekResponse {
+  next: string | null
+  previous: string | null
+  weeks: OrderWeekGroup[]
+}
+
 export interface OrdersPage {
-  results: Order[]
+  weeks: OrderWeekGroup[]
   nextCursor: string | null
   previousCursor: string | null
 }
 
 export async function fetchOrders(cursor: string | null): Promise<OrdersPage> {
   const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''
-  const page = await apiFetch<CursorPage<Order>>(`/api/orders/${query}`)
+  const page = await apiFetch<OrderWeekResponse>(`/api/orders/${query}`)
   return {
-    results: page.results,
+    weeks: page.weeks,
     nextCursor: cursorFromUrl(page.next),
     previousCursor: cursorFromUrl(page.previous),
   }
@@ -35,6 +49,7 @@ export interface CreateOrderInput {
   customer_id?: number
   new_customer?: NewCustomerInput
   shipping_address?: AddressInput
+  discount?: number
   items: CreateOrderLineItemInput[]
 }
 
@@ -43,4 +58,8 @@ export function createOrder(input: CreateOrderInput): Promise<Order> {
     method: 'POST',
     body: JSON.stringify(input),
   })
+}
+
+export function fetchOrderInvoice(orderId: number) {
+  return apiFetchBlob(`/api/orders/${orderId}/invoice/`)
 }

@@ -12,10 +12,9 @@ import type { Address } from './types'
 import type { Order, OrderStatus } from '../orders/types'
 
 const statusColor: Record<OrderStatus, string> = {
-  pending: 'default',
   paid: 'blue',
-  shipped: 'green',
-  cancelled: 'red',
+  cash_pickup: 'green',
+  referral: 'purple',
 }
 
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
@@ -45,7 +44,9 @@ const orderColumns: TableColumnsType<Order> = [
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
-    render: (status: OrderStatus) => <Tag color={statusColor[status]}>{status}</Tag>,
+    render: (status: OrderStatus) => (
+      <Tag color={statusColor[status]}>{status.replace('_', ' ')}</Tag>
+    ),
   },
   {
     title: 'Total',

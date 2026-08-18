@@ -131,6 +131,15 @@ code {
   background: var(--logo-red-bg);
 }
 
+/* Week-section divider rows (see OrdersPage) -- !important since the
+   zebra-striping rule above is more specific (an extra :nth-child class)
+   and would otherwise win on even rows. */
+.ant-table-tbody > tr.week-header-row > td {
+  background: var(--accent-bg) !important;
+  color: var(--accent);
+  font-weight: 700;
+}
+
 /* Sorter/filter icons default to a low-contrast gray, invisible against
    the blue header background -- Table's ComponentToken API doesn't expose
    these as configurable tokens, so this needs !important to beat Ant
@@ -149,4 +158,21 @@ code {
 
 .ant-btn {
   text-transform: uppercase;
+}
+
+.ant-tag {
+  text-transform: uppercase;
+}
+
+/* Account menu (Toolbar's avatar dropdown) -- matches the nav links'
+   text-sm size: uppercase, blue, bold. Ant Design's Menu theme sets an
+   explicit itemColor via its own componentCls-scoped selector, which
+   beats a plain class selector on specificity, so color needs
+   !important (as with the table header background earlier); the other
+   properties aren't set by Ant Design here so don't need it. */
+.ant-dropdown-menu-item {
+  text-transform: uppercase;
+  color: var(--accent) !important;
+  font-size: 14px;
+  font-weight: 700;
 }

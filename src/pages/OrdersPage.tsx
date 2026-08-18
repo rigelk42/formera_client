@@ -1,41 +1,110 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Alert, Button, Space, Table, Tag, type TableColumnsType } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import { useFillHeight } from '../lib/useFillHeight'
+import { formatWeekRange } from '../lib/weekGroups'
 import { OrderDetailModal } from '../orders/OrderDetailModal'
 import { OrderFormModal } from '../orders/OrderFormModal'
 import { useOrders } from '../orders/useOrders'
+import type { OrderWeekGroup } from '../orders/api'
 import type { Order, OrderStatus } from '../orders/types'
 
 const statusColor: Record<OrderStatus, string> = {
-  pending: 'default',
   paid: 'blue',
-  shipped: 'green',
-  cancelled: 'red',
+  cash_pickup: 'green',
+  referral: 'purple',
 }
 
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
-const columns: TableColumnsType<Order> = [
-  { title: 'Order #', dataIndex: 'order_number', key: 'order_number' },
-  { title: 'Customer', dataIndex: 'customer_name', key: 'customer_name' },
+interface WeekHeaderRow {
+  isWeekHeader: true
+  rowKey: string
+  label: string
+  total: number
+}
+
+type OrderRow = Order | WeekHeaderRow
+
+function isWeekHeaderRow(row: OrderRow): row is WeekHeaderRow {
+  return 'isWeekHeader' in row
+}
+
+// Flattens the backend's already-grouped-by-week response into a single
+// row list, with a section-header row inserted before each week's orders
+// -- grouping happens server-side (see OrderWeekPagination) so a week is
+// never split across two pages.
+function buildRows(weeks: OrderWeekGroup[]): OrderRow[] {
+  const rows: OrderRow[] = []
+
+  for (const week of weeks) {
+    // No "Z"/offset suffix, so this parses as local midnight rather than
+    // UTC midnight -- avoids the label showing the wrong day in
+    // timezones behind UTC.
+    const monday = new Date(`${week.week_start}T00:00:00`)
+    const total = week.orders.reduce((sum, order) => sum + Number(order.total_amount), 0)
+    rows.push({
+      isWeekHeader: true,
+      rowKey: `week-${week.week_start}`,
+      label: formatWeekRange(monday),
+      total,
+    })
+    rows.push(...week.orders)
+  }
+
+  return rows
+}
+
+const columns: TableColumnsType<OrderRow> = [
+  {
+    title: 'Date',
+    dataIndex: 'created_at',
+    key: 'created_at',
+    // First column carries the merged week-header cell (label + total).
+    onCell: (row) => (isWeekHeaderRow(row) ? { colSpan: 5 } : {}),
+    render: (_, row) =>
+      isWeekHeaderRow(row) ? (
+        <div className="flex items-center justify-between">
+          <span>{row.label}</span>
+          <span>Week Total: {currency.format(row.total)}</span>
+        </div>
+      ) : (
+        new Date(row.created_at).toLocaleDateString()
+      ),
+  },
+  {
+    title: 'Order #',
+    dataIndex: 'order_number',
+    key: 'order_number',
+    onCell: (row) => (isWeekHeaderRow(row) ? { colSpan: 0 } : {}),
+    render: (_, row) => (isWeekHeaderRow(row) ? null : row.order_number),
+  },
+  {
+    title: 'Customer',
+    dataIndex: 'customer_name',
+    key: 'customer_name',
+    onCell: (row) => (isWeekHeaderRow(row) ? { colSpan: 0 } : {}),
+    render: (_, row) => (isWeekHeaderRow(row) ? null : row.customer_name),
+  },
   {
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
-    render: (status: OrderStatus) => <Tag color={statusColor[status]}>{status}</Tag>,
+    onCell: (row) => (isWeekHeaderRow(row) ? { colSpan: 0 } : {}),
+    render: (_, row) =>
+      isWeekHeaderRow(row) ? null : (
+        <Tag color={statusColor[row.status as OrderStatus]}>
+          {row.status.replace('_', ' ')}
+        </Tag>
+      ),
   },
   {
     title: 'Total',
     dataIndex: 'total_amount',
     key: 'total_amount',
-    render: (amount: string) => currency.format(Number(amount)),
-  },
-  {
-    title: 'Date',
-    dataIndex: 'created_at',
-    key: 'created_at',
-    render: (date: string) => new Date(date).toLocaleDateString(),
+    onCell: (row) => (isWeekHeaderRow(row) ? { colSpan: 0 } : {}),
+    render: (_, row) =>
+      isWeekHeaderRow(row) ? null : currency.format(Number(row.total_amount)),
   },
 ]
 
@@ -45,6 +114,7 @@ export function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const { data, isPending, isFetching, isError } = useOrders(cursor)
   const [tableWrapRef, tableHeight] = useFillHeight(480)
+  const rows = useMemo(() => buildRows(data?.weeks ?? []), [data?.weeks])
 
   return (
     <section className="flex flex-1 flex-col px-5 pt-3 pb-1">
@@ -64,17 +134,21 @@ export function OrdersPage() {
       )}
 
       <div ref={tableWrapRef} className="min-h-0 flex-1">
-        <Table<Order>
-          rowKey="id"
+        <Table<OrderRow>
+          rowKey={(row) => (isWeekHeaderRow(row) ? row.rowKey : row.id)}
           loading={isPending}
-          dataSource={data?.results ?? []}
+          dataSource={rows}
           columns={columns}
           pagination={false}
           scroll={{ x: 'max-content', y: tableHeight }}
-          onRow={(order) => ({
-            onClick: () => setSelectedOrder(order),
-            className: 'cursor-pointer',
-          })}
+          onRow={(row) =>
+            isWeekHeaderRow(row)
+              ? { className: 'week-header-row' }
+              : {
+                  onClick: () => setSelectedOrder(row),
+                  className: 'cursor-pointer',
+                }
+          }
         />
       </div>
 

@@ -68,7 +68,7 @@ export function Toolbar() {
                   className="flex items-center rounded-full"
                   aria-label={`Account menu for ${user?.username ?? 'account'}`}
                 >
-                  <Avatar icon={<UserOutlined />} />
+                  <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'var(--accent)' }} />
                 </button>
               </Dropdown>
             </div>
