@@ -56,6 +56,7 @@ export function CustomersPage() {
         dataSource={data?.results ?? []}
         columns={columns}
         pagination={false}
+        scroll={{ x: 'max-content' }}
         onRow={(customer) => ({
           onClick: () => setSelectedCustomerId(customer.id),
           className: 'cursor-pointer',

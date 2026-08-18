@@ -167,7 +167,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
           </Form.Item>
         ) : (
           <>
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Form.Item
                 label="First name"
                 name={['newCustomer', 'first_name']}
@@ -185,7 +185,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
                 <Input />
               </Form.Item>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Form.Item
                 label="Email"
                 name={['newCustomer', 'email']}
@@ -245,7 +245,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
                 <Form.Item label="Address line 2" name={['address', 'line2']}>
                   <Input />
                 </Form.Item>
-                <div className="flex gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row">
                   <Form.Item
                     label="City"
                     name={['address', 'city']}
@@ -263,7 +263,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
                     <Input />
                   </Form.Item>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row">
                   <Form.Item
                     label="Postal code"
                     name={['address', 'postal_code']}
@@ -300,12 +300,16 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
                 </Button>
               </div>
               {fields.map((field) => (
-                <Space key={field.key} align="baseline" className="mb-2 flex">
+                <Space
+                  key={field.key}
+                  align="baseline"
+                  className="mb-2 flex flex-wrap"
+                >
                   <Form.Item
                     {...field}
                     name={[field.name, 'product']}
                     rules={[{ required: true, message: 'Select a product' }]}
-                    className="mb-0 w-64"
+                    className="mb-0 w-full sm:w-64"
                   >
                     <Select
                       showSearch

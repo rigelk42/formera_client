@@ -106,12 +106,16 @@ export function ProductFormModal({ open, onClose }: ProductFormModalProps) {
                 </Button>
               </div>
               {fields.map((field) => (
-                <Space key={field.key} align="baseline" className="mb-2 flex">
+                <Space
+                  key={field.key}
+                  align="baseline"
+                  className="mb-2 flex flex-wrap"
+                >
                   <Form.Item
                     {...field}
                     name={[field.name, 'ingredient_name']}
                     rules={[{ required: true, message: 'Ingredient name is required' }]}
-                    className="mb-0 flex-1"
+                    className="mb-0 min-w-40 flex-1"
                   >
                     <Input placeholder="Ingredient name" />
                   </Form.Item>
