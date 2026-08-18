@@ -1,5 +1,13 @@
 export type OrderStatus = 'paid' | 'cash_pickup' | 'referral'
 
+export type ShippingStatus =
+  | 'not_shipped'
+  | 'label_created'
+  | 'in_transit'
+  | 'delivered'
+  | 'exception'
+  | 'voided'
+
 export interface OrderLineItem {
   id: number
   product: number
@@ -33,4 +41,27 @@ export interface Order {
   items: OrderLineItem[]
   created_at: string
   updated_at: string
+  shipping_status: ShippingStatus
+  carrier_code: string
+  carrier_name: string
+  service_code: string
+  tracking_number: string
+  label_url: string
+  // DRF serializes DecimalField as a string; null until a label exists.
+  shipping_cost: string | null
+  shipped_at: string | null
+}
+
+// Best-effort shape for ShipStation's GET /v2/carriers response -- there's
+// no sandbox to verify field names against a real response ahead of time,
+// so double check these against the actual payload on first live use.
+export interface CarrierService {
+  service_code: string
+  name: string
+}
+
+export interface Carrier {
+  carrier_id: string
+  friendly_name: string
+  services: CarrierService[]
 }

@@ -12,6 +12,7 @@ import {
 import { DownloadOutlined } from '@ant-design/icons'
 import { ApiError } from '../lib/api'
 import { fetchOrderInvoice } from './api'
+import { ShipmentPanel } from './ShipmentPanel'
 import type { Order, OrderLineItem, OrderStatus } from './types'
 
 const statusColor: Record<OrderStatus, string> = {
@@ -46,6 +47,17 @@ interface OrderDetailModalProps {
 
 export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
   const [downloading, setDownloading] = useState(false)
+  // Local override so shipment actions (which return the updated order)
+  // reflect immediately in this modal, without waiting on the parent
+  // list's own refetch timing. Reset (during render, not an effect --
+  // see https://react.dev/learn/you-might-not-need-an-effect) whenever a
+  // different order prop comes in.
+  const [prevOrderId, setPrevOrderId] = useState(order?.id)
+  const [liveOrder, setLiveOrder] = useState(order)
+  if (order?.id !== prevOrderId) {
+    setPrevOrderId(order?.id)
+    setLiveOrder(order)
+  }
 
   const handleDownloadInvoice = async () => {
     if (!order) return
@@ -94,57 +106,64 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
       footer={null}
       width={720}
     >
-      {order && (
+      {liveOrder && (
         <>
           <Descriptions column={{ xs: 1, sm: 2 }} size="small" className="mb-6">
-            <Descriptions.Item label="Customer">{order.customer_name}</Descriptions.Item>
+            <Descriptions.Item label="Customer">
+              {liveOrder.customer_name}
+            </Descriptions.Item>
             <Descriptions.Item label="Status">
-              <Tag color={statusColor[order.status]}>
-                {order.status.replace('_', ' ')}
+              <Tag color={statusColor[liveOrder.status]}>
+                {liveOrder.status.replace('_', ' ')}
               </Tag>
             </Descriptions.Item>
-            {order.discount && (
-              <Descriptions.Item label="Discount">{order.discount}%</Descriptions.Item>
+            {liveOrder.discount && (
+              <Descriptions.Item label="Discount">{liveOrder.discount}%</Descriptions.Item>
             )}
             <Descriptions.Item label="Total">
-              {currency.format(Number(order.total_amount))}
+              {currency.format(Number(liveOrder.total_amount))}
             </Descriptions.Item>
             <Descriptions.Item label="Date">
-              {new Date(order.created_at).toLocaleDateString()}
+              {new Date(liveOrder.created_at).toLocaleDateString()}
             </Descriptions.Item>
           </Descriptions>
 
           <h3 className="mb-2 text-base font-medium text-[var(--text-h)]">
             Shipping address
           </h3>
-          {order.shipping_address ? (
+          {liveOrder.shipping_address ? (
             <Descriptions column={{ xs: 1, sm: 2 }} size="small" className="mb-6">
               <Descriptions.Item label="Address" span={2}>
-                {order.shipping_address.line2
-                  ? `${order.shipping_address.line1}, ${order.shipping_address.line2}`
-                  : order.shipping_address.line1}
+                {liveOrder.shipping_address.line2
+                  ? `${liveOrder.shipping_address.line1}, ${liveOrder.shipping_address.line2}`
+                  : liveOrder.shipping_address.line1}
               </Descriptions.Item>
               <Descriptions.Item label="City">
-                {order.shipping_address.city}
+                {liveOrder.shipping_address.city}
               </Descriptions.Item>
               <Descriptions.Item label="State">
-                {order.shipping_address.state}
+                {liveOrder.shipping_address.state}
               </Descriptions.Item>
               <Descriptions.Item label="Postal code">
-                {order.shipping_address.postal_code}
+                {liveOrder.shipping_address.postal_code}
               </Descriptions.Item>
               <Descriptions.Item label="Country">
-                {order.shipping_address.country}
+                {liveOrder.shipping_address.country}
               </Descriptions.Item>
             </Descriptions>
           ) : (
             <Empty description="No shipping address on file" className="mb-6" />
           )}
 
+          <h3 className="mb-2 text-base font-medium text-[var(--text-h)]">Shipping</h3>
+          <div className="mb-6">
+            <ShipmentPanel order={liveOrder} onUpdated={setLiveOrder} />
+          </div>
+
           <h3 className="mb-2 text-base font-medium text-[var(--text-h)]">Items</h3>
           <Table<OrderLineItem>
             rowKey="id"
-            dataSource={order.items}
+            dataSource={liveOrder.items}
             columns={itemColumns}
             pagination={false}
             size="small"
