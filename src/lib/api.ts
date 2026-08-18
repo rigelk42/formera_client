@@ -1,3 +1,5 @@
+import { tokenStorage } from './tokenStorage'
+
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 export class ApiError extends Error {
@@ -43,20 +45,35 @@ function parseErrorBody(body: unknown): {
 // ever in flight at a time. Without this, several queries hitting an
 // expired access token around the same moment (e.g. customers + products
 // + options on initial load) would each independently call refresh with
-// the same refresh-token cookie; since refresh rotates and blacklists
-// that token on use, only the first to land actually succeeds and every
-// other concurrent caller gets a permanent 401 for its own request.
+// the same refresh token; since refresh rotates and blacklists that token
+// on use, only the first to land actually succeeds and every other
+// concurrent caller gets a permanent 401 for its own request.
 let refreshPromise: Promise<boolean> | null = null
 
 function refreshAccessToken(): Promise<boolean> {
-  refreshPromise ??= fetch(`${API_URL}/api/auth/refresh/`, {
-    method: 'POST',
-    credentials: 'include',
-  })
-    .then((response) => response.ok)
-    .finally(() => {
-      refreshPromise = null
+  refreshPromise ??= (async () => {
+    const refresh = tokenStorage.getRefresh()
+    if (!refresh) return false
+
+    const response = await fetch(`${API_URL}/api/auth/refresh/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh }),
     })
+    if (!response.ok) {
+      // The refresh token is dead (expired/blacklisted) -- clear both
+      // tokens so the app doesn't keep trying to use them, and so
+      // AuthContext's "do we even have a token" check reflects reality.
+      tokenStorage.clear()
+      return false
+    }
+
+    const body = (await response.json()) as { access: string; refresh: string }
+    tokenStorage.set(body.access, body.refresh)
+    return true
+  })().finally(() => {
+    refreshPromise = null
+  })
   return refreshPromise
 }
 
@@ -65,9 +82,16 @@ async function requestWithRefresh(
   init: RequestInit,
   allowRefresh: boolean,
 ): Promise<Response> {
+  // Read the token fresh on every call (not just once in apiFetch) so a
+  // retry after refreshAccessToken() picks up the newly-rotated token
+  // instead of resending the now-blacklisted one that got this 401.
+  const access = tokenStorage.getAccess()
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
-    credentials: 'include',
+    headers: {
+      ...init.headers,
+      ...(access ? { Authorization: `Bearer ${access}` } : {}),
+    },
   })
 
   if (response.status !== 401 || !allowRefresh || path === '/api/auth/refresh/') {
