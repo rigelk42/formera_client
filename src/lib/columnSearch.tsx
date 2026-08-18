@@ -45,7 +45,10 @@ export function getColumnSearchProps<T>(
       </div>
     ),
     filterIcon: (filtered: boolean) => (
-      <SearchOutlined style={filtered ? { color: 'var(--accent)' } : undefined} />
+      // Header background is the accent blue, so the active state needs a
+      // color that still contrasts against it -- reuses the same red as
+      // the active nav link rather than the (now invisible) accent blue.
+      <SearchOutlined style={filtered ? { color: 'var(--logo-red)' } : undefined} />
     ),
     onFilter: (value, record) =>
       getValue(record).toLowerCase().includes(String(value).toLowerCase()),

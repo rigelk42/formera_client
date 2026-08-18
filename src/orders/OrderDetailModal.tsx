@@ -35,7 +35,7 @@ interface OrderDetailModalProps {
 export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
   return (
     <Modal
-      title={order ? `Order #${order.id}` : 'Order'}
+      title={order ? `Order ${order.order_number}` : 'Order'}
       open={order !== null}
       onCancel={onClose}
       footer={null}
@@ -90,7 +90,7 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
             columns={itemColumns}
             pagination={false}
             size="small"
-            scroll={{ x: 'max-content' }}
+            scroll={{ x: 'max-content', y: 240 }}
           />
         </>
       )}

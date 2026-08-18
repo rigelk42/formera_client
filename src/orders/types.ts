@@ -20,6 +20,7 @@ export interface OrderShippingAddress {
 
 export interface Order {
   id: number
+  order_number: string
   customer: number
   customer_name: string
   shipping_address: OrderShippingAddress | null

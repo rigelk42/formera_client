@@ -60,7 +60,7 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
             columns={dosageColumns}
             pagination={false}
             size="small"
-            scroll={{ x: 'max-content' }}
+            scroll={{ x: 'max-content', y: 240 }}
             locale={{ emptyText: <Empty description="No ingredients on file" /> }}
           />
         </>

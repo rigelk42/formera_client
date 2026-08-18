@@ -34,7 +34,7 @@ const addressColumns: TableColumnsType<Address> = [
 ]
 
 const orderColumns: TableColumnsType<Order> = [
-  { title: 'Order #', dataIndex: 'id', key: 'id' },
+  { title: 'Order #', dataIndex: 'order_number', key: 'order_number' },
   {
     title: 'Date',
     dataIndex: 'created_at',
@@ -93,7 +93,7 @@ export function CustomerDetailModal({ customerId, onClose }: CustomerDetailModal
             columns={addressColumns}
             pagination={false}
             size="small"
-            scroll={{ x: 'max-content' }}
+            scroll={{ x: 'max-content', y: 240 }}
             className="mb-6"
             locale={{ emptyText: <Empty description="No addresses on file" /> }}
           />
@@ -107,7 +107,7 @@ export function CustomerDetailModal({ customerId, onClose }: CustomerDetailModal
             columns={orderColumns}
             pagination={false}
             size="small"
-            scroll={{ x: 'max-content' }}
+            scroll={{ x: 'max-content', y: 240 }}
             locale={{ emptyText: <Empty description="No past orders" /> }}
           />
         </>

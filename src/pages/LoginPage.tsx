@@ -41,7 +41,7 @@ export function LoginPage() {
   return (
     <section className="flex grow flex-col place-content-center place-items-center px-5 py-8">
       <div className="w-full max-w-sm">
-        <h1 className="mb-6! text-center text-2xl! font-medium text-[var(--text-h)]">
+        <h1 className="mb-6! text-center text-2xl! font-medium text-[var(--accent)]">
           Sign in
         </h1>
         <Form layout="vertical" requiredMark={false} onFinish={handleFinish}>

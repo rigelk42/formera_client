@@ -9,11 +9,14 @@
   --accent: #0774b8;
   --accent-bg: rgba(7, 116, 184, 0.1);
   --accent-border: rgba(7, 116, 184, 0.5);
+  /* Matches the "RESEARCH" wordmark in the logo -- fixed brand color, same in light/dark. */
+  --logo-red: #d7232e;
+  --logo-red-bg: rgba(215, 35, 46, 0.08);
   --social-bg: rgba(244, 243, 236, 0.5);
   --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
@@ -41,6 +44,7 @@
     --accent: #47bfff;
     --accent-bg: rgba(71, 191, 255, 0.15);
     --accent-border: rgba(71, 191, 255, 0.5);
+    --logo-red-bg: rgba(215, 35, 46, 0.15);
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
   }
@@ -50,16 +54,19 @@
   }
 }
 
+/* Header and footer backgrounds go full-bleed to the viewport edge; only
+   the routed page content in between (see App.tsx's <main>) keeps the
+   1126px reading-width column and its flanking border lines. */
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
   text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+  /* height (not min-height): with min-height, if the flex children's
+     computed sizes come out even a fraction of a pixel taller than the
+     viewport due to rounding, the container grows to fit and produces a
+     sliver of page-level scroll. A fixed height clamps #root exactly, so
+     flex-grow absorbs any rounding slack internally instead. */
+  height: 100svh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
 }
 
 body {
@@ -76,10 +83,11 @@ h2 {
 h1 {
   font-size: 56px;
   letter-spacing: -1.68px;
-  margin: 32px 0;
+  margin: 0;
+  color: var(--accent);
+  text-transform: uppercase;
   @media (max-width: 1024px) {
     font-size: 36px;
-    margin: 20px 0;
   }
 }
 h2 {
@@ -108,4 +116,37 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+.ant-table-thead > tr > th {
+  text-transform: uppercase;
+}
+
+.ant-table-tbody > tr > td {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.ant-table-tbody > tr:nth-child(even) > td {
+  background: var(--logo-red-bg);
+}
+
+/* Sorter/filter icons default to a low-contrast gray, invisible against
+   the blue header background -- Table's ComponentToken API doesn't expose
+   these as configurable tokens, so this needs !important to beat Ant
+   Design's own higher-specificity generated selector (as with headerBg
+   before we moved that to the theme token). */
+.ant-table-column-sorter,
+.ant-table-filter-trigger {
+  color: #fff !important;
+}
+
+.ant-table-column-sorter-up.active,
+.ant-table-column-sorter-down.active,
+.ant-table-filter-trigger.active {
+  color: var(--logo-red) !important;
+}
+
+.ant-btn {
+  text-transform: uppercase;
 }

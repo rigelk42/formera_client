@@ -6,6 +6,7 @@ import { CustomerFormModal } from '../customers/CustomerFormModal'
 import { useCustomers } from '../customers/useCustomers'
 import type { Customer } from '../customers/types'
 import { getColumnSearchProps } from '../lib/columnSearch'
+import { useFillHeight } from '../lib/useFillHeight'
 
 const customerName = (customer: Customer) =>
   `${customer.first_name} ${customer.last_name}`
@@ -27,11 +28,12 @@ export function CustomersPage() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const { data, isPending, isFetching, isError } = useCustomers(cursor)
+  const [tableWrapRef, tableHeight] = useFillHeight(480)
 
   return (
-    <section className="px-5 py-3">
+    <section className="flex flex-1 flex-col px-5 pt-3 pb-1">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl! font-medium text-[var(--text-h)]">Customers</h1>
+        <h1 className="text-2xl! font-medium text-[var(--accent)]">Customers</h1>
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -50,34 +52,38 @@ export function CustomersPage() {
         />
       )}
 
-      <Table<Customer>
-        rowKey="id"
-        loading={isPending}
-        dataSource={data?.results ?? []}
-        columns={columns}
-        pagination={false}
-        scroll={{ x: 'max-content' }}
-        onRow={(customer) => ({
-          onClick: () => setSelectedCustomerId(customer.id),
-          className: 'cursor-pointer',
-        })}
-      />
+      <div ref={tableWrapRef} className="min-h-0 flex-1">
+        <Table<Customer>
+          rowKey="id"
+          loading={isPending}
+          dataSource={data?.results ?? []}
+          columns={columns}
+          pagination={false}
+          scroll={{ x: 'max-content', y: tableHeight }}
+          onRow={(customer) => ({
+            onClick: () => setSelectedCustomerId(customer.id),
+            className: 'cursor-pointer',
+          })}
+        />
+      </div>
 
-      <Space className="mt-4">
-        <Button
-          disabled={!data?.previousCursor}
-          onClick={() => setCursor(data?.previousCursor ?? null)}
-        >
-          Previous
-        </Button>
-        <Button
-          disabled={!data?.nextCursor}
-          loading={isFetching}
-          onClick={() => setCursor(data?.nextCursor ?? null)}
-        >
-          Next
-        </Button>
-      </Space>
+      <div className="flex justify-center py-4">
+        <Space>
+          <Button
+            disabled={!data?.previousCursor}
+            onClick={() => setCursor(data?.previousCursor ?? null)}
+          >
+            Previous
+          </Button>
+          <Button
+            disabled={!data?.nextCursor}
+            loading={isFetching}
+            onClick={() => setCursor(data?.nextCursor ?? null)}
+          >
+            Next
+          </Button>
+        </Space>
+      </div>
 
       <CustomerDetailModal
         customerId={selectedCustomerId}

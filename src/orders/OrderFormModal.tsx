@@ -112,7 +112,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
 
     try {
       const order = await createOrder.mutateAsync(input)
-      message.success(`Order #${order.id} created for ${order.customer_name}`)
+      message.success(`Order ${order.order_number} created for ${order.customer_name}`)
       onClose()
     } catch (err) {
       setError(applyApiError(err, form))

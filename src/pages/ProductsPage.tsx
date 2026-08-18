@@ -6,6 +6,7 @@ import { ProductFormModal } from '../products/ProductFormModal'
 import { useProducts } from '../products/useProducts'
 import type { Product } from '../products/types'
 import { getColumnSearchProps } from '../lib/columnSearch'
+import { useFillHeight } from '../lib/useFillHeight'
 
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
@@ -32,11 +33,12 @@ export function ProductsPage() {
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const { data, isPending, isFetching, isError } = useProducts(cursor)
+  const [tableWrapRef, tableHeight] = useFillHeight(480)
 
   return (
-    <section className="px-5 py-3">
+    <section className="flex flex-1 flex-col px-5 pt-3 pb-1">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl! font-medium text-[var(--text-h)]">Products</h1>
+        <h1 className="text-2xl! font-medium text-[var(--accent)]">Products</h1>
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -55,34 +57,38 @@ export function ProductsPage() {
         />
       )}
 
-      <Table<Product>
-        rowKey="id"
-        loading={isPending}
-        dataSource={data?.results ?? []}
-        columns={columns}
-        pagination={false}
-        scroll={{ x: 'max-content' }}
-        onRow={(product) => ({
-          onClick: () => setSelectedProductId(product.id),
-          className: 'cursor-pointer',
-        })}
-      />
+      <div ref={tableWrapRef} className="min-h-0 flex-1">
+        <Table<Product>
+          rowKey="id"
+          loading={isPending}
+          dataSource={data?.results ?? []}
+          columns={columns}
+          pagination={false}
+          scroll={{ x: 'max-content', y: tableHeight }}
+          onRow={(product) => ({
+            onClick: () => setSelectedProductId(product.id),
+            className: 'cursor-pointer',
+          })}
+        />
+      </div>
 
-      <Space className="mt-4">
-        <Button
-          disabled={!data?.previousCursor}
-          onClick={() => setCursor(data?.previousCursor ?? null)}
-        >
-          Previous
-        </Button>
-        <Button
-          disabled={!data?.nextCursor}
-          loading={isFetching}
-          onClick={() => setCursor(data?.nextCursor ?? null)}
-        >
-          Next
-        </Button>
-      </Space>
+      <div className="flex justify-center py-4">
+        <Space>
+          <Button
+            disabled={!data?.previousCursor}
+            onClick={() => setCursor(data?.previousCursor ?? null)}
+          >
+            Previous
+          </Button>
+          <Button
+            disabled={!data?.nextCursor}
+            loading={isFetching}
+            onClick={() => setCursor(data?.nextCursor ?? null)}
+          >
+            Next
+          </Button>
+        </Space>
+      </div>
 
       <ProductDetailModal
         productId={selectedProductId}
