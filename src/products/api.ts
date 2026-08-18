@@ -18,6 +18,10 @@ export async function fetchProducts(cursor: string | null): Promise<ProductsPage
   }
 }
 
+export function fetchProduct(id: number): Promise<ProductDetail> {
+  return apiFetch<ProductDetail>(`/api/products/${id}/`)
+}
+
 // For populating a product picker (e.g. the order form) rather than the
 // paginated table -- 100 is ProductCursorPagination's max_page_size, the
 // most this can fetch in one request without a dedicated search endpoint.

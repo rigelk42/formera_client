@@ -12,6 +12,7 @@ export function useCreateOrder() {
       // history, so refresh every customers query rather than trying to
       // target just the affected one.
       queryClient.invalidateQueries({ queryKey: ['customers'] })
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
     },
   })
 }

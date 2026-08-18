@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Alert, Button, Space, Table, type TableColumnsType } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
+import { ProductDetailModal } from '../products/ProductDetailModal'
 import { ProductFormModal } from '../products/ProductFormModal'
 import { useProducts } from '../products/useProducts'
 import type { Product } from '../products/types'
@@ -28,6 +29,7 @@ const columns: TableColumnsType<Product> = [
 
 export function ProductsPage() {
   const [cursor, setCursor] = useState<string | null>(null)
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const { data, isPending, isFetching, isError } = useProducts(cursor)
 
@@ -59,6 +61,11 @@ export function ProductsPage() {
         dataSource={data?.results ?? []}
         columns={columns}
         pagination={false}
+        scroll={{ x: 'max-content' }}
+        onRow={(product) => ({
+          onClick: () => setSelectedProductId(product.id),
+          className: 'cursor-pointer',
+        })}
       />
 
       <Space className="mt-4">
@@ -76,6 +83,11 @@ export function ProductsPage() {
           Next
         </Button>
       </Space>
+
+      <ProductDetailModal
+        productId={selectedProductId}
+        onClose={() => setSelectedProductId(null)}
+      />
 
       <ProductFormModal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
     </section>

@@ -1,6 +1,23 @@
 import { apiFetch } from '../lib/api'
+import { cursorFromUrl, type CursorPage } from '../lib/pagination'
 import type { AddressInput } from '../customers/types'
 import type { Order } from './types'
+
+export interface OrdersPage {
+  results: Order[]
+  nextCursor: string | null
+  previousCursor: string | null
+}
+
+export async function fetchOrders(cursor: string | null): Promise<OrdersPage> {
+  const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''
+  const page = await apiFetch<CursorPage<Order>>(`/api/orders/${query}`)
+  return {
+    results: page.results,
+    nextCursor: cursorFromUrl(page.next),
+    previousCursor: cursorFromUrl(page.previous),
+  }
+}
 
 export interface NewCustomerInput {
   first_name: string
