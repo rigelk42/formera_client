@@ -46,7 +46,7 @@ function buildRows(weeks: OrderWeekGroup[]): OrderRow[] {
     // No "Z"/offset suffix, so this parses as local midnight rather than
     // UTC midnight -- avoids the label showing the wrong day in
     // timezones behind UTC.
-    const monday = new Date(`${week.week_start}T00:00:00`)
+    const weekStart = new Date(`${week.week_start}T00:00:00`)
     const total = week.orders.reduce(
       (sum, order) => sum + Number(order.total_amount),
       0,
@@ -54,7 +54,7 @@ function buildRows(weeks: OrderWeekGroup[]): OrderRow[] {
     rows.push({
       isWeekHeader: true,
       rowKey: `week-${week.week_start}`,
-      label: formatWeekRange(monday),
+      label: formatWeekRange(weekStart),
       total,
     })
     rows.push(...week.orders)
