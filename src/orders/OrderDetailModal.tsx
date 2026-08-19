@@ -3,16 +3,24 @@ import {
   Button,
   Descriptions,
   Empty,
+  InputNumber,
   message,
   Modal,
+  Space,
   Table,
   Tag,
   type TableColumnsType,
 } from 'antd'
-import { DownloadOutlined } from '@ant-design/icons'
+import {
+  CheckOutlined,
+  CloseOutlined,
+  DownloadOutlined,
+  EditOutlined,
+} from '@ant-design/icons'
 import { ApiError } from '../lib/api'
 import { fetchOrderInvoice } from './api'
 import { ShipmentPanel } from './ShipmentPanel'
+import { useUpdateOrderLineItemPrice } from './useOrderLineItem'
 import type { Order, OrderLineItem, OrderStatus } from './types'
 
 const statusColor: Record<OrderStatus, string> = {
@@ -22,23 +30,6 @@ const statusColor: Record<OrderStatus, string> = {
 }
 
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
-
-const itemColumns: TableColumnsType<OrderLineItem> = [
-  { title: 'Product', dataIndex: 'product_name', key: 'product_name' },
-  { title: 'Quantity', dataIndex: 'quantity', key: 'quantity' },
-  {
-    title: 'Unit price',
-    dataIndex: 'unit_price',
-    key: 'unit_price',
-    render: (price: string) => currency.format(Number(price)),
-  },
-  {
-    title: 'Subtotal',
-    dataIndex: 'subtotal',
-    key: 'subtotal',
-    render: (amount: string) => currency.format(Number(amount)),
-  },
-]
 
 interface OrderDetailModalProps {
   order: Order | null
@@ -58,6 +49,95 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
     setPrevOrderId(order?.id)
     setLiveOrder(order)
   }
+
+  // Which line item's price is currently in edit mode, and the value of
+  // its (not-yet-saved) input -- null editingItemId means every row shows
+  // its plain price + pencil icon.
+  const [editingItemId, setEditingItemId] = useState<number | null>(null)
+  const [editingPrice, setEditingPrice] = useState<number | null>(null)
+  const updatePrice = useUpdateOrderLineItemPrice()
+
+  const startEditingPrice = (item: OrderLineItem) => {
+    setEditingItemId(item.id)
+    setEditingPrice(Number(item.unit_price))
+  }
+
+  const cancelEditingPrice = () => {
+    setEditingItemId(null)
+    setEditingPrice(null)
+  }
+
+  const saveEditingPrice = async (itemId: number) => {
+    if (!liveOrder || editingPrice == null) return
+    try {
+      const updated = await updatePrice.mutateAsync({
+        orderId: liveOrder.id,
+        itemId,
+        unitPrice: editingPrice,
+      })
+      setLiveOrder(updated)
+      setEditingItemId(null)
+      message.success('Price updated.')
+    } catch (err) {
+      message.error(err instanceof ApiError ? err.message : 'Failed to update price.')
+    }
+  }
+
+  const itemColumns: TableColumnsType<OrderLineItem> = [
+    { title: 'Product', dataIndex: 'product_name', key: 'product_name' },
+    { title: 'Quantity', dataIndex: 'quantity', key: 'quantity' },
+    {
+      title: 'Unit price',
+      dataIndex: 'unit_price',
+      key: 'unit_price',
+      render: (price: string, item) =>
+        editingItemId === item.id ? (
+          <Space>
+            <InputNumber
+              autoFocus
+              min={0}
+              step={0.01}
+              precision={2}
+              addonBefore="$"
+              value={editingPrice}
+              onChange={setEditingPrice}
+              onPressEnter={() => saveEditingPrice(item.id)}
+              disabled={updatePrice.isPending}
+            />
+            <Button
+              type="text"
+              size="small"
+              icon={<CheckOutlined />}
+              loading={updatePrice.isPending}
+              onClick={() => saveEditingPrice(item.id)}
+            />
+            <Button
+              type="text"
+              size="small"
+              icon={<CloseOutlined />}
+              disabled={updatePrice.isPending}
+              onClick={cancelEditingPrice}
+            />
+          </Space>
+        ) : (
+          <span className="inline-flex items-center gap-1.5">
+            {currency.format(Number(price))}
+            <Button
+              type="text"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => startEditingPrice(item)}
+            />
+          </span>
+        ),
+    },
+    {
+      title: 'Subtotal',
+      dataIndex: 'subtotal',
+      key: 'subtotal',
+      render: (amount: string) => currency.format(Number(amount)),
+    },
+  ]
 
   const handleDownloadInvoice = async () => {
     if (!order) return

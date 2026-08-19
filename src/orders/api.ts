@@ -43,6 +43,8 @@ export interface NewCustomerInput {
 export interface CreateOrderLineItemInput {
   product: number
   quantity: number
+  // Omit to default to the product's current catalog price server-side.
+  unit_price?: number
 }
 
 export interface CreateOrderInput {
@@ -62,6 +64,19 @@ export function createOrder(input: CreateOrderInput): Promise<Order> {
 
 export function fetchOrderInvoice(orderId: number) {
   return apiFetchBlob(`/api/orders/${orderId}/invoice/`)
+}
+
+// Overrides a single line item's price on an already-placed order,
+// recomputing the order's total server-side -- see OrderLineItemUpdateView.
+export function updateOrderLineItemPrice(
+  orderId: number,
+  itemId: number,
+  unitPrice: number,
+): Promise<Order> {
+  return apiFetch<Order>(`/api/orders/${orderId}/items/${itemId}/`, {
+    method: 'PATCH',
+    body: JSON.stringify({ unit_price: unitPrice }),
+  })
 }
 
 export function fetchCarriers(): Promise<{ carriers: Carrier[] }> {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Alert,
   Button,
@@ -41,7 +41,7 @@ interface OrderFormValues {
   }
   includeDiscount?: boolean
   discount?: number
-  items: { product: number; quantity: number }[]
+  items: { product: number; quantity: number; unit_price?: number }[]
 }
 
 interface OrderFormModalProps {
@@ -69,6 +69,25 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
   const canUseExistingAddress =
     customerMode === 'existing' && existingAddresses.length > 0
 
+  // Defaults to the customer's first address so placing an order for a
+  // repeat customer doesn't require re-clicking through "add address" ->
+  // "use existing" -> pick-from-list every time. Still just a default --
+  // switching customers re-derives it, and the user can change it via the
+  // fields below.
+  useEffect(() => {
+    if (customerMode !== 'existing' || !selectedCustomer) return
+
+    if (selectedCustomer.addresses.length > 0) {
+      form.setFieldsValue({
+        includeAddress: true,
+        addressMode: 'existing',
+        addressId: selectedCustomer.addresses[0].id,
+      })
+    } else {
+      form.setFieldsValue({ addressMode: 'new' })
+    }
+  }, [selectedCustomer, customerMode, form])
+
   const handleCancel = () => {
     setError(null)
     onClose()
@@ -88,6 +107,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
       items: values.items.map((item) => ({
         product: item.product,
         quantity: item.quantity,
+        unit_price: item.unit_price,
       })),
       shipping_address: address
         ? {
@@ -332,6 +352,20 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
                         value: product.id,
                         label: `${product.name} — $${product.price}`,
                       }))}
+                      // Prefills the price field with this product's
+                      // catalog price -- still just a default, edited
+                      // below to record a negotiated/custom price.
+                      onChange={(productId: number) => {
+                        const product = (productOptions ?? []).find(
+                          (p) => p.id === productId,
+                        )
+                        if (product) {
+                          form.setFieldValue(
+                            ['items', field.name, 'unit_price'],
+                            Number(product.price),
+                          )
+                        }
+                      }}
                     />
                   </Form.Item>
                   <Form.Item
@@ -341,6 +375,14 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
                     className="mb-0"
                   >
                     <InputNumber min={1} step={1} placeholder="Qty" />
+                  </Form.Item>
+                  <Form.Item
+                    {...field}
+                    name={[field.name, 'unit_price']}
+                    rules={[{ required: true, message: 'Price is required' }]}
+                    className="mb-0"
+                  >
+                    <InputNumber min={0} step={0.01} precision={2} addonBefore="$" />
                   </Form.Item>
                   <Button
                     type="text"

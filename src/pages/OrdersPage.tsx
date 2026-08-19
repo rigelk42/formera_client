@@ -179,7 +179,10 @@ export function OrdersPage() {
       </div>
 
       <Suspense fallback={null}>
-        <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+        <OrderDetailModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
 
         <OrderFormModal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
       </Suspense>
