@@ -57,7 +57,9 @@ export function Toolbar() {
                 trigger={['click']}
                 placement="bottomRight"
                 menu={{
-                  items: [{ key: 'logout', label: 'Log out', icon: <LogoutOutlined /> }],
+                  items: [
+                    { key: 'logout', label: 'Log out', icon: <LogoutOutlined /> },
+                  ],
                   onClick: ({ key }) => {
                     if (key === 'logout') void logout()
                   },
@@ -68,7 +70,10 @@ export function Toolbar() {
                   className="flex items-center rounded-full"
                   aria-label={`Account menu for ${user?.username ?? 'account'}`}
                 >
-                  <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'var(--accent)' }} />
+                  <Avatar
+                    icon={<UserOutlined />}
+                    style={{ backgroundColor: 'var(--accent)' }}
+                  />
                 </button>
               </Dropdown>
             </div>

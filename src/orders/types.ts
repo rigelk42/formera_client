@@ -1,12 +1,7 @@
 export type OrderStatus = 'paid' | 'cash_pickup' | 'referral'
 
 export type ShippingStatus =
-  | 'not_shipped'
-  | 'label_created'
-  | 'in_transit'
-  | 'delivered'
-  | 'exception'
-  | 'voided'
+  'not_shipped' | 'label_created' | 'in_transit' | 'delivered' | 'exception' | 'voided'
 
 export interface OrderLineItem {
   id: number

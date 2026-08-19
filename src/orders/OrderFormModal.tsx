@@ -6,7 +6,6 @@ import {
   Form,
   Input,
   InputNumber,
-  message,
   Modal,
   Radio,
   Select,
@@ -115,8 +114,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
     }
 
     try {
-      const order = await createOrder.mutateAsync(input)
-      message.success(`Order ${order.order_number} created for ${order.customer_name}`)
+      await createOrder.mutateAsync(input)
       onClose()
     } catch (err) {
       setError(applyApiError(err, form))
@@ -298,9 +296,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
           <Form.Item
             label="Discount"
             name="discount"
-            rules={[
-              { required: true, message: 'Enter a discount between 1 and 100' },
-            ]}
+            rules={[{ required: true, message: 'Enter a discount between 1 and 100' }]}
           >
             <InputNumber min={1} max={100} step={1} addonAfter="%" />
           </Form.Item>
@@ -320,11 +316,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
                 </Button>
               </div>
               {fields.map((field) => (
-                <Space
-                  key={field.key}
-                  align="baseline"
-                  className="mb-2 flex flex-wrap"
-                >
+                <Space key={field.key} align="baseline" className="mb-2 flex flex-wrap">
                   <Form.Item
                     {...field}
                     name={[field.name, 'product']}

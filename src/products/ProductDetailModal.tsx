@@ -1,11 +1,4 @@
-import {
-  Descriptions,
-  Empty,
-  Modal,
-  Spin,
-  Table,
-  type TableColumnsType,
-} from 'antd'
+import { Descriptions, Empty, Modal, Spin, Table, type TableColumnsType } from 'antd'
 import { useProduct } from './useProduct'
 import type { Dosage } from './types'
 

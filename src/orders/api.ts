@@ -81,7 +81,10 @@ export interface CreateShipmentInput {
 // These purchase a real, live ShipStation label/void a real one -- never
 // call them without the user having just confirmed the specific action in
 // the UI (see OrderDetailModal's confirm step).
-export function createShipment(orderId: number, input: CreateShipmentInput): Promise<Order> {
+export function createShipment(
+  orderId: number,
+  input: CreateShipmentInput,
+): Promise<Order> {
   return apiFetch<Order>(`/api/orders/${orderId}/shipment/`, {
     method: 'POST',
     body: JSON.stringify(input),

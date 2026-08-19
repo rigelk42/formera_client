@@ -72,6 +72,7 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
       link.click()
       link.remove()
       URL.revokeObjectURL(url)
+      message.success(`Invoice for ${order.order_number} downloaded`)
     } catch (err) {
       message.error(
         err instanceof ApiError ? err.message : 'Failed to download invoice.',
@@ -118,7 +119,9 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
               </Tag>
             </Descriptions.Item>
             {liveOrder.discount && (
-              <Descriptions.Item label="Discount">{liveOrder.discount}%</Descriptions.Item>
+              <Descriptions.Item label="Discount">
+                {liveOrder.discount}%
+              </Descriptions.Item>
             )}
             <Descriptions.Item label="Total">
               {currency.format(Number(liveOrder.total_amount))}

@@ -106,11 +106,7 @@ export function ProductFormModal({ open, onClose }: ProductFormModalProps) {
                 </Button>
               </div>
               {fields.map((field) => (
-                <Space
-                  key={field.key}
-                  align="baseline"
-                  className="mb-2 flex flex-wrap"
-                >
+                <Space key={field.key} align="baseline" className="mb-2 flex flex-wrap">
                   <Form.Item
                     {...field}
                     name={[field.name, 'ingredient_name']}

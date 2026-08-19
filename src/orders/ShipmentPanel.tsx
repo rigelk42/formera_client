@@ -64,7 +64,9 @@ export function ShipmentPanel({ order, onUpdated }: ShipmentPanelProps) {
       setShowForm(false)
       message.success(`Label created -- tracking ${updated.tracking_number}`)
     } catch (err) {
-      message.error(err instanceof ApiError ? err.message : 'Failed to create shipment.')
+      message.error(
+        err instanceof ApiError ? err.message : 'Failed to create shipment.',
+      )
     }
   }
 
@@ -72,8 +74,13 @@ export function ShipmentPanel({ order, onUpdated }: ShipmentPanelProps) {
     try {
       const updated = await refreshShipment.mutateAsync(order.id)
       onUpdated(updated)
+      message.success(
+        `Tracking refreshed -- ${updated.shipping_status.replace('_', ' ')}`,
+      )
     } catch (err) {
-      message.error(err instanceof ApiError ? err.message : 'Failed to refresh tracking.')
+      message.error(
+        err instanceof ApiError ? err.message : 'Failed to refresh tracking.',
+      )
     }
   }
 
@@ -107,8 +114,8 @@ export function ShipmentPanel({ order, onUpdated }: ShipmentPanelProps) {
         className="rounded-md border border-[var(--border)] p-4"
       >
         <p className="mb-3 text-sm text-[var(--text)]">
-          This purchases a real, live label from your ShipStation account --
-          double check the carrier, service, and package details below.
+          This purchases a real, live label from your ShipStation account -- double
+          check the carrier, service, and package details below.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Form.Item
@@ -120,7 +127,10 @@ export function ShipmentPanel({ order, onUpdated }: ShipmentPanelProps) {
             <Select
               placeholder="Select a carrier"
               loading={carriersLoading}
-              options={carriers.map((c) => ({ value: c.carrier_id, label: c.friendly_name }))}
+              options={carriers.map((c) => ({
+                value: c.carrier_id,
+                label: c.friendly_name,
+              }))}
               onChange={() => form.setFieldValue('service_code', undefined)}
             />
           </Form.Item>
@@ -173,7 +183,9 @@ export function ShipmentPanel({ order, onUpdated }: ShipmentPanelProps) {
         {order.carrier_name} -- {order.service_code}
       </span>
       {order.tracking_number && (
-        <span className="text-sm text-[var(--text)]">Tracking: {order.tracking_number}</span>
+        <span className="text-sm text-[var(--text)]">
+          Tracking: {order.tracking_number}
+        </span>
       )}
       {order.label_url && (
         <Button
@@ -194,7 +206,12 @@ export function ShipmentPanel({ order, onUpdated }: ShipmentPanelProps) {
           >
             Refresh Tracking
           </Button>
-          <Button size="small" danger loading={voidShipment.isPending} onClick={handleVoid}>
+          <Button
+            size="small"
+            danger
+            loading={voidShipment.isPending}
+            onClick={handleVoid}
+          >
             Void Shipment
           </Button>
         </>
