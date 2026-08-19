@@ -1,13 +1,18 @@
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { Alert, Button, Space, Table, Tag, type TableColumnsType } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import { useFillHeight } from '../lib/useFillHeight'
 import { formatWeekRange } from '../lib/weekGroups'
-import { OrderDetailModal } from '../orders/OrderDetailModal'
-import { OrderFormModal } from '../orders/OrderFormModal'
 import { useOrders } from '../orders/useOrders'
 import type { OrderWeekGroup } from '../orders/api'
 import type { Order, OrderStatus } from '../orders/types'
+
+const OrderDetailModal = lazy(() =>
+  import('../orders/OrderDetailModal').then((m) => ({ default: m.OrderDetailModal })),
+)
+const OrderFormModal = lazy(() =>
+  import('../orders/OrderFormModal').then((m) => ({ default: m.OrderFormModal })),
+)
 
 const statusColor: Record<OrderStatus, string> = {
   paid: 'blue',
@@ -173,9 +178,11 @@ export function OrdersPage() {
         </Space>
       </div>
 
-      <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+      <Suspense fallback={null}>
+        <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
 
-      <OrderFormModal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+        <OrderFormModal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+      </Suspense>
     </section>
   )
 }

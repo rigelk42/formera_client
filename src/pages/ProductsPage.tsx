@@ -1,12 +1,19 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Alert, Button, Space, Table, type TableColumnsType } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
-import { ProductDetailModal } from '../products/ProductDetailModal'
-import { ProductFormModal } from '../products/ProductFormModal'
 import { useProducts } from '../products/useProducts'
 import type { Product } from '../products/types'
 import { getColumnSearchProps } from '../lib/columnSearch'
 import { useFillHeight } from '../lib/useFillHeight'
+
+const ProductDetailModal = lazy(() =>
+  import('../products/ProductDetailModal').then((m) => ({
+    default: m.ProductDetailModal,
+  })),
+)
+const ProductFormModal = lazy(() =>
+  import('../products/ProductFormModal').then((m) => ({ default: m.ProductFormModal })),
+)
 
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
@@ -90,12 +97,14 @@ export function ProductsPage() {
         </Space>
       </div>
 
-      <ProductDetailModal
-        productId={selectedProductId}
-        onClose={() => setSelectedProductId(null)}
-      />
+      <Suspense fallback={null}>
+        <ProductDetailModal
+          productId={selectedProductId}
+          onClose={() => setSelectedProductId(null)}
+        />
 
-      <ProductFormModal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+        <ProductFormModal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+      </Suspense>
     </section>
   )
 }

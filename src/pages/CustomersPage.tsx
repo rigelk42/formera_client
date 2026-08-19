@@ -1,12 +1,21 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Alert, Button, Space, Table, type TableColumnsType } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
-import { CustomerDetailModal } from '../customers/CustomerDetailModal'
-import { CustomerFormModal } from '../customers/CustomerFormModal'
 import { useCustomers } from '../customers/useCustomers'
 import type { Customer } from '../customers/types'
 import { getColumnSearchProps } from '../lib/columnSearch'
 import { useFillHeight } from '../lib/useFillHeight'
+
+const CustomerDetailModal = lazy(() =>
+  import('../customers/CustomerDetailModal').then((m) => ({
+    default: m.CustomerDetailModal,
+  })),
+)
+const CustomerFormModal = lazy(() =>
+  import('../customers/CustomerFormModal').then((m) => ({
+    default: m.CustomerFormModal,
+  })),
+)
 
 const customerName = (customer: Customer) =>
   `${customer.first_name} ${customer.last_name}`
@@ -85,12 +94,14 @@ export function CustomersPage() {
         </Space>
       </div>
 
-      <CustomerDetailModal
-        customerId={selectedCustomerId}
-        onClose={() => setSelectedCustomerId(null)}
-      />
+      <Suspense fallback={null}>
+        <CustomerDetailModal
+          customerId={selectedCustomerId}
+          onClose={() => setSelectedCustomerId(null)}
+        />
 
-      <CustomerFormModal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+        <CustomerFormModal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+      </Suspense>
     </section>
   )
 }
