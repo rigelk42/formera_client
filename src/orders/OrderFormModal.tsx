@@ -12,6 +12,7 @@ import {
   Space,
 } from 'antd'
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
+import { AddressFields } from '../components/AddressFields'
 import { applyApiError } from '../lib/formErrors'
 import { useCustomer } from '../customers/useCustomer'
 import { useCustomerOptions } from '../customers/useCustomerOptions'
@@ -151,6 +152,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
       okText="Create order"
       width={640}
       destroyOnHidden
+      afterClose={() => form.resetFields()}
     >
       <Form
         form={form}
@@ -256,54 +258,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
                 />
               </Form.Item>
             ) : (
-              <>
-                <Form.Item
-                  label="Address line 1"
-                  name={['address', 'line1']}
-                  rules={[{ required: true, message: 'Address line 1 is required' }]}
-                >
-                  <Input />
-                </Form.Item>
-                <Form.Item label="Address line 2" name={['address', 'line2']}>
-                  <Input />
-                </Form.Item>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Form.Item
-                    label="City"
-                    name={['address', 'city']}
-                    rules={[{ required: true, message: 'City is required' }]}
-                    className="flex-1"
-                  >
-                    <Input />
-                  </Form.Item>
-                  <Form.Item
-                    label="State"
-                    name={['address', 'state']}
-                    rules={[{ required: true, message: 'State is required' }]}
-                    className="flex-1"
-                  >
-                    <Input />
-                  </Form.Item>
-                </div>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Form.Item
-                    label="Postal code"
-                    name={['address', 'postal_code']}
-                    rules={[{ required: true, message: 'Postal code is required' }]}
-                    className="flex-1"
-                  >
-                    <Input />
-                  </Form.Item>
-                  <Form.Item
-                    label="Country"
-                    name={['address', 'country']}
-                    rules={[{ required: true, message: 'Country is required' }]}
-                    className="flex-1"
-                  >
-                    <Input />
-                  </Form.Item>
-                </div>
-              </>
+              <AddressFields form={form} name={['address']} />
             )}
           </>
         )}

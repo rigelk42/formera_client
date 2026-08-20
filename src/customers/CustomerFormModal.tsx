@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Alert, Checkbox, Form, Input, Modal } from 'antd'
+import { AddressFields } from '../components/AddressFields'
 import { applyApiError } from '../lib/formErrors'
 import { useCreateCustomer } from './useCreateCustomer'
 
@@ -69,6 +70,7 @@ export function CustomerFormModal({ open, onClose }: CustomerFormModalProps) {
       confirmLoading={createCustomer.isPending}
       okText="Create"
       destroyOnHidden
+      afterClose={() => form.resetFields()}
     >
       <Form form={form} layout="vertical" onFinish={handleFinish}>
         {error && <Alert type="error" message={error} showIcon className="mb-4" />}
@@ -108,44 +110,7 @@ export function CustomerFormModal({ open, onClose }: CustomerFormModalProps) {
           {({ getFieldValue }) =>
             getFieldValue('includeAddress') ? (
               <div className="mt-4">
-                <Form.Item
-                  label="Address line 1"
-                  name={['address', 'line1']}
-                  rules={[{ required: true, message: 'Address line 1 is required' }]}
-                >
-                  <Input />
-                </Form.Item>
-                <Form.Item label="Address line 2" name={['address', 'line2']}>
-                  <Input />
-                </Form.Item>
-                <Form.Item
-                  label="City"
-                  name={['address', 'city']}
-                  rules={[{ required: true, message: 'City is required' }]}
-                >
-                  <Input />
-                </Form.Item>
-                <Form.Item
-                  label="State"
-                  name={['address', 'state']}
-                  rules={[{ required: true, message: 'State is required' }]}
-                >
-                  <Input />
-                </Form.Item>
-                <Form.Item
-                  label="Postal code"
-                  name={['address', 'postal_code']}
-                  rules={[{ required: true, message: 'Postal code is required' }]}
-                >
-                  <Input />
-                </Form.Item>
-                <Form.Item
-                  label="Country"
-                  name={['address', 'country']}
-                  rules={[{ required: true, message: 'Country is required' }]}
-                >
-                  <Input />
-                </Form.Item>
+                <AddressFields form={form} name={['address']} />
               </div>
             ) : null
           }

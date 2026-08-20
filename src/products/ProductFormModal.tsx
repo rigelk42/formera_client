@@ -58,6 +58,7 @@ export function ProductFormModal({ open, onClose }: ProductFormModalProps) {
       confirmLoading={createProduct.isPending}
       okText="Create"
       destroyOnHidden
+      afterClose={() => form.resetFields()}
     >
       <Form
         form={form}
