@@ -78,7 +78,7 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
   useEffect(() => {
     if (customerMode !== 'existing' || !selectedCustomer) return
 
-    if (selectedCustomer.addresses.length > 0) {
+    if ((selectedCustomer.addresses ?? []).length > 0) {
       form.setFieldsValue({
         includeAddress: true,
         addressMode: 'existing',
