@@ -66,6 +66,12 @@ export function fetchOrderInvoice(orderId: number) {
   return apiFetchBlob(`/api/orders/${orderId}/invoice/`)
 }
 
+// Archives the order server-side rather than deleting the row (see
+// OrderDetailView).
+export function deleteOrder(orderId: number): Promise<void> {
+  return apiFetch<void>(`/api/orders/${orderId}/`, { method: 'DELETE' })
+}
+
 // Overrides a single line item's price on an already-placed order,
 // recomputing the order's total server-side -- see OrderLineItemUpdateView.
 export function updateOrderLineItemPrice(

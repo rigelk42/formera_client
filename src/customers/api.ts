@@ -46,3 +46,17 @@ export function createCustomer(input: CreateCustomerInput): Promise<CustomerDeta
     body: JSON.stringify(input),
   })
 }
+
+// Archives the customer server-side rather than deleting the row (see
+// CustomerDetailView) -- their existing addresses/orders are untouched.
+export function deleteCustomer(id: number): Promise<void> {
+  return apiFetch<void>(`/api/customers/${id}/`, { method: 'DELETE' })
+}
+
+// Archives one of a customer's addresses server-side (see
+// AddressDetailView) rather than deleting the row.
+export function deleteAddress(customerId: number, addressId: number): Promise<void> {
+  return apiFetch<void>(`/api/customers/${customerId}/addresses/${addressId}/`, {
+    method: 'DELETE',
+  })
+}

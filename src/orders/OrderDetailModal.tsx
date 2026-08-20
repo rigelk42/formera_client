@@ -6,6 +6,7 @@ import {
   InputNumber,
   message,
   Modal,
+  Popconfirm,
   Space,
   Table,
   Tag,
@@ -14,12 +15,14 @@ import {
 import {
   CheckOutlined,
   CloseOutlined,
+  DeleteOutlined,
   DownloadOutlined,
   EditOutlined,
 } from '@ant-design/icons'
 import { ApiError } from '../lib/api'
 import { fetchOrderInvoice } from './api'
 import { ShipmentPanel } from './ShipmentPanel'
+import { useDeleteOrder } from './useDeleteOrder'
 import { useUpdateOrderLineItemPrice } from './useOrderLineItem'
 import type { Order, OrderLineItem, OrderStatus } from './types'
 
@@ -38,6 +41,7 @@ interface OrderDetailModalProps {
 
 export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
   const [downloading, setDownloading] = useState(false)
+  const deleteOrder = useDeleteOrder()
   // Local override so shipment actions (which return the updated order)
   // reflect immediately in this modal, without waiting on the parent
   // list's own refetch timing. Reset (during render, not an effect --
@@ -162,6 +166,12 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
     }
   }
 
+  const handleDelete = async () => {
+    if (!order) return
+    await deleteOrder.mutateAsync(order.id)
+    onClose()
+  }
+
   return (
     <Modal
       title={
@@ -177,6 +187,21 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
             >
               Get Invoice
             </Button>
+            <Popconfirm
+              title="Delete this order?"
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              onConfirm={handleDelete}
+            >
+              <Button
+                danger
+                size="small"
+                icon={<DeleteOutlined />}
+                loading={deleteOrder.isPending}
+              >
+                Delete
+              </Button>
+            </Popconfirm>
           </div>
         ) : (
           'Order'

@@ -47,3 +47,9 @@ export function createProduct(input: CreateProductInput): Promise<ProductDetail>
     body: JSON.stringify(input),
   })
 }
+
+// Archives the product server-side rather than deleting the row (see
+// ProductDetailView) -- past order line items still reference it.
+export function deleteProduct(id: number): Promise<void> {
+  return apiFetch<void>(`/api/products/${id}/`, { method: 'DELETE' })
+}

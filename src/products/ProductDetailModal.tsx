@@ -1,4 +1,15 @@
-import { Descriptions, Empty, Modal, Spin, Table, type TableColumnsType } from 'antd'
+import {
+  Button,
+  Descriptions,
+  Empty,
+  Modal,
+  Popconfirm,
+  Spin,
+  Table,
+  type TableColumnsType,
+} from 'antd'
+import { DeleteOutlined } from '@ant-design/icons'
+import { useDeleteProduct } from './useDeleteProduct'
 import { useProduct } from './useProduct'
 import type { Dosage } from './types'
 
@@ -16,10 +27,41 @@ interface ProductDetailModalProps {
 
 export function ProductDetailModal({ productId, onClose }: ProductDetailModalProps) {
   const { data: product, isPending, isError } = useProduct(productId)
+  const deleteProduct = useDeleteProduct()
+
+  const handleDelete = async () => {
+    if (!product) return
+    await deleteProduct.mutateAsync(product.id)
+    onClose()
+  }
 
   return (
     <Modal
-      title={product ? product.name : 'Product'}
+      title={
+        product ? (
+          <div className="flex items-center gap-3">
+            <span>{product.name}</span>
+            <Popconfirm
+              title="Delete this product?"
+              description="It will be removed from the catalog and product pickers."
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              onConfirm={handleDelete}
+            >
+              <Button
+                danger
+                size="small"
+                icon={<DeleteOutlined />}
+                loading={deleteProduct.isPending}
+              >
+                Delete
+              </Button>
+            </Popconfirm>
+          </div>
+        ) : (
+          'Product'
+        )
+      }
       open={productId !== null}
       onCancel={onClose}
       footer={null}
