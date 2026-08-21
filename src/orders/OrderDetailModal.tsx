@@ -187,41 +187,43 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
     <Modal
       title={
         order ? (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-2">
             <span>{order.order_number}</span>
-            <Button
-              type="primary"
-              size="small"
-              icon={<DownloadOutlined />}
-              loading={downloading}
-              onClick={handleDownloadInvoice}
-            >
-              Get Invoice
-            </Button>
-            {liveOrder && isEditable(liveOrder) && (
+            <div className="flex flex-wrap items-center gap-2">
               <Button
+                type="primary"
                 size="small"
-                icon={<EditOutlined />}
-                onClick={() => setIsEditOpen(true)}
+                icon={<DownloadOutlined />}
+                loading={downloading}
+                onClick={handleDownloadInvoice}
               >
-                Edit
+                Get Invoice
               </Button>
-            )}
-            <Popconfirm
-              title="Delete this order?"
-              okText="Delete"
-              okButtonProps={{ danger: true }}
-              onConfirm={handleDelete}
-            >
-              <Button
-                danger
-                size="small"
-                icon={<DeleteOutlined />}
-                loading={deleteOrder.isPending}
+              {liveOrder && isEditable(liveOrder) && (
+                <Button
+                  size="small"
+                  icon={<EditOutlined />}
+                  onClick={() => setIsEditOpen(true)}
+                >
+                  Edit
+                </Button>
+              )}
+              <Popconfirm
+                title="Delete this order?"
+                okText="Delete"
+                okButtonProps={{ danger: true }}
+                onConfirm={handleDelete}
               >
-                Delete
-              </Button>
-            </Popconfirm>
+                <Button
+                  danger
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  loading={deleteOrder.isPending}
+                >
+                  Delete
+                </Button>
+              </Popconfirm>
+            </div>
           </div>
         ) : (
           'Order'
