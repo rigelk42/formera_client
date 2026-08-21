@@ -17,6 +17,7 @@ const OrderFormModal = lazy(() =>
 const statusColor: Record<OrderStatus, string> = {
   paid: 'blue',
   cash_pickup: 'green',
+  venmo: 'cyan',
   referral: 'purple',
 }
 
@@ -69,7 +70,7 @@ const columns: TableColumnsType<OrderRow> = [
     dataIndex: 'created_at',
     key: 'created_at',
     // First column carries the merged week-header cell (label + total).
-    onCell: (row) => (isWeekHeaderRow(row) ? { colSpan: 5 } : {}),
+    onCell: (row) => (isWeekHeaderRow(row) ? { colSpan: 4 } : {}),
     render: (_, row) =>
       isWeekHeaderRow(row) ? (
         <div className="flex items-center justify-between">
@@ -79,13 +80,6 @@ const columns: TableColumnsType<OrderRow> = [
       ) : (
         new Date(row.created_at).toLocaleDateString()
       ),
-  },
-  {
-    title: 'Order #',
-    dataIndex: 'order_number',
-    key: 'order_number',
-    onCell: (row) => (isWeekHeaderRow(row) ? { colSpan: 0 } : {}),
-    render: (_, row) => (isWeekHeaderRow(row) ? null : row.order_number),
   },
   {
     title: 'Customer',

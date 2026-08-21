@@ -19,6 +19,7 @@ import type { Order, OrderStatus } from '../orders/types'
 const statusColor: Record<OrderStatus, string> = {
   paid: 'blue',
   cash_pickup: 'green',
+  venmo: 'cyan',
   referral: 'purple',
 }
 

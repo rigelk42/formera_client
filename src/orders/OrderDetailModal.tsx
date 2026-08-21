@@ -21,6 +21,7 @@ import {
 } from '@ant-design/icons'
 import { ApiError } from '../lib/api'
 import { fetchOrderInvoice } from './api'
+import { OrderEditModal } from './OrderEditModal'
 import { ShipmentPanel } from './ShipmentPanel'
 import { useDeleteOrder } from './useDeleteOrder'
 import { useUpdateOrderLineItemPrice } from './useOrderLineItem'
@@ -29,10 +30,19 @@ import type { Order, OrderLineItem, OrderStatus } from './types'
 const statusColor: Record<OrderStatus, string> = {
   paid: 'blue',
   cash_pickup: 'green',
+  venmo: 'cyan',
   referral: 'purple',
 }
 
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+
+// Matches the backend's _LOCKED_SHIPPING_STATUSES: editing is only allowed
+// while there's no active shipping label, so the order record can't drift
+// from what was actually shipped. "voided" is included since voiding
+// clears the active label.
+function isEditable(order: Order): boolean {
+  return order.shipping_status === 'not_shipped' || order.shipping_status === 'voided'
+}
 
 interface OrderDetailModalProps {
   order: Order | null
@@ -41,6 +51,7 @@ interface OrderDetailModalProps {
 
 export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
   const [downloading, setDownloading] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
   const deleteOrder = useDeleteOrder()
   // Local override so shipment actions (which return the updated order)
   // reflect immediately in this modal, without waiting on the parent
@@ -177,7 +188,7 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
       title={
         order ? (
           <div className="flex items-center gap-3">
-            <span>Order {order.order_number}</span>
+            <span>{order.order_number}</span>
             <Button
               type="primary"
               size="small"
@@ -187,6 +198,15 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
             >
               Get Invoice
             </Button>
+            {liveOrder && isEditable(liveOrder) && (
+              <Button
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => setIsEditOpen(true)}
+              >
+                Edit
+              </Button>
+            )}
             <Popconfirm
               title="Delete this order?"
               okText="Delete"
@@ -279,6 +299,11 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
           />
         </>
       )}
+      <OrderEditModal
+        order={isEditOpen ? liveOrder : null}
+        onClose={() => setIsEditOpen(false)}
+        onUpdated={setLiveOrder}
+      />
     </Modal>
   )
 }

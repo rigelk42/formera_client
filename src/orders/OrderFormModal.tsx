@@ -9,16 +9,19 @@ import {
   Modal,
   Radio,
   Select,
-  Space,
 } from 'antd'
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
+import { PlusOutlined } from '@ant-design/icons'
 import { AddressFields } from '../components/AddressFields'
 import { applyApiError } from '../lib/formErrors'
 import { useCustomer } from '../customers/useCustomer'
 import { useCustomerOptions } from '../customers/useCustomerOptions'
 import { useProductOptions } from '../products/useProductOptions'
 import { useCreateOrder } from './useCreateOrder'
+import { NEW_PRODUCT_OPTION, OrderLineItemFields } from './OrderLineItemFields'
+import { ORDER_STATUS_OPTIONS } from './orderStatusOptions'
 import type { CreateOrderInput } from './api'
+import type { OrderItemValue } from './OrderLineItemFields'
+import type { OrderStatus } from './types'
 
 interface OrderFormValues {
   customerMode: 'existing' | 'new'
@@ -42,7 +45,8 @@ interface OrderFormValues {
   }
   includeDiscount?: boolean
   discount?: number
-  items: { product: number; quantity: number; unit_price?: number }[]
+  status: OrderStatus
+  items: OrderItemValue[]
 }
 
 interface OrderFormModalProps {
@@ -105,11 +109,24 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
           : undefined
 
     const input: CreateOrderInput = {
-      items: values.items.map((item) => ({
-        product: item.product,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-      })),
+      status: values.status,
+      items: values.items.map((item) => {
+        if (item.product === NEW_PRODUCT_OPTION) {
+          return {
+            new_product: {
+              name: item.newProductName ?? '',
+              price: item.unit_price ?? 0,
+            },
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+          }
+        }
+        return {
+          product: item.product,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+        }
+      }),
       shipping_address: address
         ? {
             line1: address.line1,
@@ -161,10 +178,15 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
         initialValues={{
           customerMode: 'existing',
           addressMode: 'new',
+          status: 'cash_pickup',
           items: [{ quantity: 1 }],
         }}
       >
         {error && <Alert type="error" message={error} showIcon className="mb-4" />}
+
+        <Form.Item label="Payment" name="status">
+          <Select options={ORDER_STATUS_OPTIONS} />
+        </Form.Item>
 
         <Form.Item label="Customer" name="customerMode">
           <Radio.Group>
@@ -203,7 +225,6 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
               <Form.Item
                 label="Last name"
                 name={['newCustomer', 'last_name']}
-                rules={[{ required: true, message: 'Last name is required' }]}
                 className="flex-1"
               >
                 <Input />
@@ -291,62 +312,15 @@ export function OrderFormModal({ open, onClose }: OrderFormModalProps) {
                 </Button>
               </div>
               {fields.map((field) => (
-                <Space key={field.key} align="baseline" className="mb-2 flex flex-wrap">
-                  <Form.Item
-                    {...field}
-                    name={[field.name, 'product']}
-                    rules={[{ required: true, message: 'Select a product' }]}
-                    className="mb-0 w-full sm:w-64"
-                  >
-                    <Select
-                      showSearch
-                      placeholder="Select a product"
-                      loading={productsLoading}
-                      optionFilterProp="label"
-                      options={(productOptions ?? []).map((product) => ({
-                        value: product.id,
-                        label: `${product.name} — $${product.price}`,
-                      }))}
-                      // Prefills the price field with this product's
-                      // catalog price -- still just a default, edited
-                      // below to record a negotiated/custom price.
-                      onChange={(productId: number) => {
-                        const product = (productOptions ?? []).find(
-                          (p) => p.id === productId,
-                        )
-                        if (product) {
-                          form.setFieldValue(
-                            ['items', field.name, 'unit_price'],
-                            Number(product.price),
-                          )
-                        }
-                      }}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    {...field}
-                    name={[field.name, 'quantity']}
-                    rules={[{ required: true, message: 'Quantity is required' }]}
-                    className="mb-0"
-                  >
-                    <InputNumber min={1} step={1} placeholder="Qty" />
-                  </Form.Item>
-                  <Form.Item
-                    {...field}
-                    name={[field.name, 'unit_price']}
-                    rules={[{ required: true, message: 'Price is required' }]}
-                    className="mb-0"
-                  >
-                    <InputNumber min={0} step={0.01} precision={2} addonBefore="$" />
-                  </Form.Item>
-                  <Button
-                    type="text"
-                    danger
-                    icon={<MinusCircleOutlined />}
-                    onClick={() => remove(field.name)}
-                    disabled={fields.length === 1}
-                  />
-                </Space>
+                <OrderLineItemFields
+                  key={field.key}
+                  form={form}
+                  field={field}
+                  productOptions={productOptions}
+                  productsLoading={productsLoading}
+                  onRemove={() => remove(field.name)}
+                  removeDisabled={fields.length === 1}
+                />
               ))}
             </div>
           )}

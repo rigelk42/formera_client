@@ -1,6 +1,6 @@
 import type { AddressInput } from '../lib/types'
 
-export type OrderStatus = 'paid' | 'cash_pickup' | 'referral'
+export type OrderStatus = 'paid' | 'cash_pickup' | 'venmo' | 'referral'
 
 export type ShippingStatus =
   'not_shipped' | 'label_created' | 'in_transit' | 'delivered' | 'exception' | 'voided'

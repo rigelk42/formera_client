@@ -1,7 +1,7 @@
 import { apiFetch, apiFetchBlob } from '../lib/api'
 import { cursorFromUrl } from '../lib/pagination'
 import type { AddressInput } from '../lib/types'
-import type { Carrier, Order } from './types'
+import type { Carrier, Order, OrderStatus } from './types'
 
 // One Monday-Sunday calendar week's worth of orders, as returned by
 // OrderWeekPagination on the backend -- grouping happens server-side so a
@@ -40,10 +40,20 @@ export interface NewCustomerInput {
   phone: string
 }
 
+export interface NewProductInput {
+  name: string
+  price: number
+}
+
+// Exactly one of product/new_product must be set, mirroring
+// CreateOrderInput's customer_id/new_customer split -- see
+// OrderLineItemCreateSerializer.validate() on the backend.
 export interface CreateOrderLineItemInput {
-  product: number
+  product?: number
+  new_product?: NewProductInput
   quantity: number
   // Omit to default to the product's current catalog price server-side.
+  // For a new_product item, this is also that product's catalog price.
   unit_price?: number
 }
 
@@ -51,6 +61,8 @@ export interface CreateOrderInput {
   customer_id?: number
   new_customer?: NewCustomerInput
   shipping_address?: AddressInput
+  // Omit to default to "cash_pickup" server-side.
+  status?: OrderStatus
   discount?: number
   items: CreateOrderLineItemInput[]
 }
@@ -70,6 +82,37 @@ export function fetchOrderInvoice(orderId: number) {
 // OrderDetailView).
 export function deleteOrder(orderId: number): Promise<void> {
   return apiFetch<void>(`/api/orders/${orderId}/`, { method: 'DELETE' })
+}
+
+// Include "id" to edit an existing line item's quantity/unit_price, or
+// omit it to add a new one -- exactly one of product/new_product is
+// required in that case, mirroring CreateOrderLineItemInput. This is a
+// full replace of the order's items: any existing item not included here
+// gets removed -- see OrderUpdateSerializer._sync_items() on the backend.
+export interface UpdateOrderLineItemInput {
+  id?: number
+  product?: number
+  new_product?: NewProductInput
+  quantity: number
+  unit_price?: number
+}
+
+// Every field is optional -- send only what's changing. Locked server-side
+// once the order has an active shipping label (see OrderDetailView.patch/
+// OrderUpdateSerializer) -- void the shipment first to edit again.
+export interface UpdateOrderInput {
+  status?: OrderStatus
+  // null explicitly clears an existing discount; omit to leave it as-is.
+  discount?: number | null
+  shipping_address?: AddressInput
+  items?: UpdateOrderLineItemInput[]
+}
+
+export function updateOrder(orderId: number, input: UpdateOrderInput): Promise<Order> {
+  return apiFetch<Order>(`/api/orders/${orderId}/`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 // Overrides a single line item's price on an already-placed order,

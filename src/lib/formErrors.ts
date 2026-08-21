@@ -7,10 +7,20 @@ import { ApiError } from './api'
 export function applyApiError(error: unknown, form: FormInstance): string | null {
   if (error instanceof ApiError) {
     if (error.fields) {
-      form.setFields(
-        Object.entries(error.fields).map(([name, errors]) => ({ name, errors })),
-      )
-      return null
+      // "non_field_errors" is DRF's convention for a serializer-level
+      // ValidationError raised from validate() rather than tied to one
+      // field (e.g. OrderCreateSerializer's "provide exactly one of
+      // customer_id/new_customer", or OrderUpdateSerializer's "this order
+      // already has a shipping label"). There's no Form.Item to attach it
+      // to, so surface it as a general alert instead of silently
+      // form.setFields()-ing it onto a field that doesn't exist.
+      const { non_field_errors, ...fieldErrors } = error.fields
+      if (Object.keys(fieldErrors).length > 0) {
+        form.setFields(
+          Object.entries(fieldErrors).map(([name, errors]) => ({ name, errors })),
+        )
+      }
+      return non_field_errors?.[0] ?? null
     }
     return error.message
   }

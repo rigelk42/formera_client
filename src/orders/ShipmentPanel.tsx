@@ -27,7 +27,7 @@ const shippingStatusColor: Record<ShippingStatus, string> = {
 
 // Pre-filled default for a typical small box -- editable per order, see
 // the plan's "default package" decision.
-const DEFAULT_PACKAGE = { weight_oz: 8, length: 6, width: 4, height: 4 }
+const DEFAULT_PACKAGE = { weight_oz: 12, length: 6, width: 4, height: 4 }
 
 interface ShipmentFormValues {
   carrier_id: string
@@ -103,17 +103,13 @@ export function ShipmentPanel({ order, onUpdated }: ShipmentPanelProps) {
     }
   }
 
-  if (order.shipping_status === 'not_shipped') {
-    if (!showForm) {
-      return (
-        <Button onClick={() => setShowForm(true)} disabled={!order.shipping_address}>
-          {order.shipping_address
-            ? 'Create Shipment'
-            : 'Add a shipping address to create a shipment'}
-        </Button>
-      )
-    }
+  // A voided label frees the order up for a new one, same as never having
+  // shipped -- without this, voiding was a dead end: the shipped-state
+  // view below has no path back to the create-shipment form.
+  const canCreateShipment =
+    order.shipping_status === 'not_shipped' || order.shipping_status === 'voided'
 
+  if (canCreateShipment && showForm) {
     return (
       <Form<ShipmentFormValues>
         form={form}
@@ -183,6 +179,16 @@ export function ShipmentPanel({ order, onUpdated }: ShipmentPanelProps) {
     )
   }
 
+  if (order.shipping_status === 'not_shipped') {
+    return (
+      <Button onClick={() => setShowForm(true)} disabled={!order.shipping_address}>
+        {order.shipping_address
+          ? 'Create Shipment'
+          : 'Add a shipping address to create a shipment'}
+      </Button>
+    )
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <Tag color={shippingStatusColor[order.shipping_status]}>
@@ -205,7 +211,17 @@ export function ShipmentPanel({ order, onUpdated }: ShipmentPanelProps) {
           Print Label
         </Button>
       )}
-      {order.shipping_status !== 'voided' && (
+      {order.shipping_status === 'voided' ? (
+        <Button
+          size="small"
+          onClick={() => setShowForm(true)}
+          disabled={!order.shipping_address}
+        >
+          {order.shipping_address
+            ? 'Create New Shipment'
+            : 'Add a shipping address to create a shipment'}
+        </Button>
+      ) : (
         <>
           <Button
             size="small"
