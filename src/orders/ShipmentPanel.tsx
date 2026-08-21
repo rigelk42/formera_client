@@ -1,5 +1,14 @@
 import { useState } from 'react'
-import { Button, Form, InputNumber, message, Select, Space, Tag } from 'antd'
+import {
+  Button,
+  Form,
+  InputNumber,
+  message,
+  Popconfirm,
+  Select,
+  Space,
+  Tag,
+} from 'antd'
 import { PrinterOutlined, ReloadOutlined } from '@ant-design/icons'
 import { ApiError } from '../lib/api'
 import { useCarriers } from './useCarriers'
@@ -206,14 +215,17 @@ export function ShipmentPanel({ order, onUpdated }: ShipmentPanelProps) {
           >
             Refresh Tracking
           </Button>
-          <Button
-            size="small"
-            danger
-            loading={voidShipment.isPending}
-            onClick={handleVoid}
+          <Popconfirm
+            title="Void this shipment?"
+            description="This cancels the live label with the carrier and cannot be undone."
+            okText="Void"
+            okButtonProps={{ danger: true }}
+            onConfirm={handleVoid}
           >
-            Void Shipment
-          </Button>
+            <Button size="small" danger loading={voidShipment.isPending}>
+              Void Shipment
+            </Button>
+          </Popconfirm>
         </>
       )}
     </div>

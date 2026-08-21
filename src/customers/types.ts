@@ -22,15 +22,6 @@ export interface Address {
   updated_at: string
 }
 
-export interface AddressInput {
-  line1: string
-  line2: string
-  city: string
-  state: string
-  postal_code: string
-  country: string
-}
-
 export interface CustomerDetail extends Customer {
   addresses: Address[]
   orders: Order[]

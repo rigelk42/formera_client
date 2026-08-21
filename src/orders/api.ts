@@ -1,6 +1,6 @@
 import { apiFetch, apiFetchBlob } from '../lib/api'
 import { cursorFromUrl } from '../lib/pagination'
-import type { AddressInput } from '../customers/types'
+import type { AddressInput } from '../lib/types'
 import type { Carrier, Order } from './types'
 
 // One Monday-Sunday calendar week's worth of orders, as returned by

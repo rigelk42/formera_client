@@ -1,6 +1,7 @@
 import { apiFetch } from '../lib/api'
 import { cursorFromUrl, type CursorPage } from '../lib/pagination'
-import type { AddressInput, Customer, CustomerDetail } from './types'
+import type { AddressInput } from '../lib/types'
+import type { Customer, CustomerDetail } from './types'
 
 export interface CustomersPage {
   results: Customer[]

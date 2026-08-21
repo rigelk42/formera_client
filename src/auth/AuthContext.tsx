@@ -1,15 +1,21 @@
-import { useCallback, type ReactNode } from 'react'
+import { useCallback, useSyncExternalStore, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '../lib/api'
 import { tokenStorage } from '../lib/tokenStorage'
 import { AuthContext, meQueryKey, type AuthStatus, type User } from './context'
 
+function getHasToken(): boolean {
+  return !!tokenStorage.getAccess()
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
-  // Read once per render rather than stored as state: a login/logout
-  // mutation's onSuccess always calls setQueryData for meQueryKey too,
-  // which already triggers the re-render that picks up the new value.
-  const hasToken = !!tokenStorage.getAccess()
+  // Subscribed rather than read once per render: a login/logout mutation's
+  // onSuccess triggers a re-render anyway, but a background token clear
+  // from lib/api.ts (a failed silent refresh) happens outside React and
+  // needs its own signal to flip this, or the UI keeps showing
+  // "authenticated" off stale data until something unrelated re-renders.
+  const hasToken = useSyncExternalStore(tokenStorage.subscribe, getHasToken)
 
   const meQuery = useQuery({
     queryKey: meQueryKey,
@@ -58,7 +64,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await logoutMutation.mutateAsync()
   }, [logoutMutation])
 
-  const user = meQuery.data ?? null
+  // Gate on hasToken, not just meQuery.enabled: after a background token
+  // clear, the query is now disabled but its cached data from before the
+  // clear is still sitting there until something refetches over it.
+  const user = hasToken ? (meQuery.data ?? null) : null
   const status: AuthStatus = !hasToken
     ? 'unauthenticated'
     : meQuery.isPending

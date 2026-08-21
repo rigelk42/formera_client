@@ -1,3 +1,5 @@
+import type { AddressInput } from '../lib/types'
+
 export type OrderStatus = 'paid' | 'cash_pickup' | 'referral'
 
 export type ShippingStatus =
@@ -12,21 +14,12 @@ export interface OrderLineItem {
   subtotal: string
 }
 
-export interface OrderShippingAddress {
-  line1: string
-  line2: string
-  city: string
-  state: string
-  postal_code: string
-  country: string
-}
-
 export interface Order {
   id: number
   order_number: string
   customer: number
   customer_name: string
-  shipping_address: OrderShippingAddress | null
+  shipping_address: AddressInput | null
   status: OrderStatus
   // Whole-percent discount applied to the line item subtotal, 1-100.
   // null means no discount was applied.
