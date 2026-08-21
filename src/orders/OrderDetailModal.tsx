@@ -159,10 +159,30 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
     setDownloading(true)
     try {
       const { blob, filename } = await fetchOrderInvoice(order.id)
+      const name = filename ?? `invoice-${order.order_number}.pdf`
+      const file = new File([blob], name, { type: blob.type || 'application/pdf' })
+
+      // iOS Safari doesn't honor <a download> for blob: URLs pointing at a
+      // previewable type like PDF -- it opens an inline preview instead of
+      // saving, and Sharing from that preview has no real filename to
+      // offer, so Mail ends up with the literal word "blob" as the
+      // attachment name. Handing the file to the native share sheet
+      // directly (supported on iOS/Android) sidesteps the blob: URL/inline
+      // preview entirely, so the real filename reaches Mail/AirDrop/etc.
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: name })
+        } catch (err) {
+          if (err instanceof Error && err.name === 'AbortError') return
+          throw err
+        }
+        return
+      }
+
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = filename ?? `invoice-${order.order_number}.pdf`
+      link.download = name
       document.body.appendChild(link)
       link.click()
       link.remove()
