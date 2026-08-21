@@ -182,9 +182,7 @@ export function ShipmentPanel({ order, onUpdated }: ShipmentPanelProps) {
   if (order.shipping_status === 'not_shipped') {
     return (
       <Button onClick={() => setShowForm(true)} disabled={!order.shipping_address}>
-        {order.shipping_address
-          ? 'Create Shipment'
-          : 'Add a shipping address to create a shipment'}
+        {order.shipping_address ? 'Create Shipment' : 'Add shipping address'}
       </Button>
     )
   }
@@ -217,9 +215,7 @@ export function ShipmentPanel({ order, onUpdated }: ShipmentPanelProps) {
           onClick={() => setShowForm(true)}
           disabled={!order.shipping_address}
         >
-          {order.shipping_address
-            ? 'Create New Shipment'
-            : 'Add a shipping address to create a shipment'}
+          {order.shipping_address ? 'Create New Shipment' : 'Add shipping address'}
         </Button>
       ) : (
         <>
