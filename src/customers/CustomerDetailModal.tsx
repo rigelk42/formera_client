@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Button,
   Descriptions,
@@ -9,7 +10,8 @@ import {
   Tag,
   type TableColumnsType,
 } from 'antd'
-import { DeleteOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import { CustomerEditModal } from './CustomerEditModal'
 import { useCustomer } from './useCustomer'
 import { useDeleteAddress } from './useDeleteAddress'
 import { useDeleteCustomer } from './useDeleteCustomer'
@@ -94,6 +96,7 @@ interface CustomerDetailModalProps {
 
 export function CustomerDetailModal({ customerId, onClose }: CustomerDetailModalProps) {
   const { data: customer, isPending, isError } = useCustomer(customerId)
+  const [isEditOpen, setIsEditOpen] = useState(false)
   const deleteCustomer = useDeleteCustomer()
   const deleteAddress = useDeleteAddress()
 
@@ -112,26 +115,35 @@ export function CustomerDetailModal({ customerId, onClose }: CustomerDetailModal
     <Modal
       title={
         customer ? (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-2">
             <span>
               {customer.first_name} {customer.last_name}
             </span>
-            <Popconfirm
-              title="Delete this customer?"
-              description="Their order history is kept -- this only removes them from the customer list."
-              okText="Delete"
-              okButtonProps={{ danger: true }}
-              onConfirm={handleDeleteCustomer}
-            >
+            <div className="flex flex-wrap items-center gap-2">
               <Button
-                danger
                 size="small"
-                icon={<DeleteOutlined />}
-                loading={deleteCustomer.isPending}
+                icon={<EditOutlined />}
+                onClick={() => setIsEditOpen(true)}
               >
-                Delete
+                Edit
               </Button>
-            </Popconfirm>
+              <Popconfirm
+                title="Delete this customer?"
+                description="Their order history is kept -- this only removes them from the customer list."
+                okText="Delete"
+                okButtonProps={{ danger: true }}
+                onConfirm={handleDeleteCustomer}
+              >
+                <Button
+                  danger
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  loading={deleteCustomer.isPending}
+                >
+                  Delete
+                </Button>
+              </Popconfirm>
+            </div>
           </div>
         ) : (
           'Customer'
@@ -186,6 +198,10 @@ export function CustomerDetailModal({ customerId, onClose }: CustomerDetailModal
           />
         </>
       )}
+      <CustomerEditModal
+        customer={isEditOpen ? (customer ?? null) : null}
+        onClose={() => setIsEditOpen(false)}
+      />
     </Modal>
   )
 }

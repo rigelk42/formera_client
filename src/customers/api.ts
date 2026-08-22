@@ -54,6 +54,25 @@ export function deleteCustomer(id: number): Promise<void> {
   return apiFetch<void>(`/api/customers/${id}/`, { method: 'DELETE' })
 }
 
+// Every field is optional -- send only what's changing. Addresses/orders
+// aren't editable through this endpoint (see CustomerUpdateSerializer).
+export interface UpdateCustomerInput {
+  first_name?: string
+  last_name?: string
+  email?: string | null
+  phone?: string
+}
+
+export function updateCustomer(
+  id: number,
+  input: UpdateCustomerInput,
+): Promise<CustomerDetail> {
+  return apiFetch<CustomerDetail>(`/api/customers/${id}/`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
 // Archives one of a customer's addresses server-side (see
 // AddressDetailView) rather than deleting the row.
 export function deleteAddress(customerId: number, addressId: number): Promise<void> {
